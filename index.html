@@ -221,17 +221,12 @@
     <button id="logout-btn" class="hybrid-btn hidden" style="right: 120px;">🚪 Выйти</button>
 
     <script>
+        // Функция для получения ключа даты (перенесена в начало)
+        function getDateKey() {
+            const date = new Date();
+            return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+        }
 
-        // Добавьте в самое начало скрипта (перед let firebaseConfig = {})
-function getDateKey() {
-  const date = new Date();
-  return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-}
-
-// Затем уже идёт остальной код:
-let firebaseConfig = {};
-let ADMIN_UIDS = [];
-let app, auth, database;
         // 1. Конфигурация будет загружаться динамически
         let firebaseConfig = {};
         let ADMIN_UIDS = [];
@@ -334,11 +329,6 @@ let app, auth, database;
                     }
                     return deviceId;
                 }
-
-          //      function getDateKey() {
-            //        const date = new Date();
-              //      return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-                //}
                 
                 function updateSyncStatus(message) {
                     elements.syncStatus.textContent = message;

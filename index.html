@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Дни недели с цифрами</title>
+    <title>Гибрид Индигра</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 600px;
+            max-width: 750px;
             margin: 0 auto;
             padding: 20px;
+            position: relative;
         }
         .day-container {
             margin-bottom: 15px;
@@ -18,127 +19,812 @@
             font-weight: bold;
             margin-bottom: 5px;
         }
+        .number-wrapper {
+            display: inline-block;
+            text-align: center;
+            margin: 15px;
+        }
+        .number-group {
+            display: inline-block;
+            margin-right: 20px;
+        }
         .number {
             display: inline-block;
-            width: 30px;
-            height: 30px;
-            line-height: 30px;
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
             text-align: center;
-            margin: 2px;
             background-color: #4CAF50;
             color: white;
             border-radius: 50%;
             cursor: pointer;
+            font-size: 18px;
+        }
+        .number-label {
+            font-size: 14px;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+        .number.special {
+            background-color: #008522;
         }
         .number.selected {
+            background-color: #f44336 !important;
+        }
+        .number.readonly {
+            cursor: default;
+            opacity: 0.7;
+        }
+        .hybrid-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 5px 10px;
+            background-color: #FF9800;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .hybrid-login {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .hybrid-login-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            width: 300px;
+        }
+        .hybrid-login input {
+            width: 100%;
+            padding: 8px;
+            margin: 10px 0;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+        }
+        .hybrid-login input[type="password"] {
+            -webkit-text-security: disc;
+        }
+        .hybrid-login button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .hidden {
+            display: none;
+        }
+        .color-legend {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+        .color-item {
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+        }
+        .color-box {
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+            border: 1px solid #ddd;
+        }
+        .sync-status {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+        .today-highlight {
+            background-color: #FFF9C4;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        .admin-row {
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        .admin-row.hidden {
+            display: none;
+        }
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .day-container {
+                text-align: center;
+            }
+            .number-group {
+                display: block;
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+            .number-wrapper {
+                margin: 10px 15px;
+            }
+            .color-legend {
+                justify-content: center;
+            }
+        }
+         .server-error {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
             background-color: #f44336;
+            color: white;
+            text-align: center;
+            padding: 15px;
+            z-index: 10000;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
     </style>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
 <body>
-    <h1>Дни недели с цифрами</h1>
+     <div class="server-error">
+        ⚠️ Сервер временно недоступен. Приложение работает в ограниченном режиме. Попробуйте зайти позже.
+    </div>
+    <h1>Свободные гибриды Индигра</h1>
+    
+    <button id="hybrid-btn" class="hybrid-btn">🔰 Гибрид</button>
+    
+    <div class="color-legend">
+        <div class="color-item">
+            <div class="color-box" style="background-color: #4CAF50;"></div>
+            <span>Свободная машина (7/24)</span>
+        </div>
+        <div class="color-item">
+            <div class="color-box" style="background-color: #008522;"></div>
+            <span>Свободная машина (8/28)</span>
+        </div>
+        <div class="color-item">
+            <div class="color-box" style="background-color: #f44336;"></div>
+            <span>Занятая машина</span>
+        </div>
+    </div>
+    
+    <div id="admin-row" class="admin-row hidden">
+        <div class="day-title">Администратор (выделить все дни):</div>
+    </div>
     
     <div id="days-container">
         <!-- Дни недели будут добавлены здесь JavaScript -->
     </div>
 
+    <div id="hybrid-login" class="hybrid-login hidden">
+        <div class="hybrid-login-content">
+            <h3>Вход для администратора</h3>
+            <input type="email" id="hybrid-email" placeholder="Введите email">
+            <input type="password" id="hybrid-password" placeholder="Введите пароль">
+            <div style="margin-top: 10px;">
+                <input type="checkbox" id="remember-device" checked>
+                <label for="remember-device">Запомнить это устройство</label>
+            </div>
+            <button id="login-btn">Войти</button>
+            <button id="cancel-btn">Отмена</button>
+        </div>
+    </div>
+
+    <div id="sync-status" class="sync-status"></div>
+    <button id="logout-btn" class="hybrid-btn hidden" style="right: 120px;">🚪 Выйти</button>
+
     <script>
+        const ADMIN_UIDS = ['DegfORMmNnQB09KJG3NOd1Cf61D2'];
+        // Конфигурация Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBar6H-aFq-vB8fFRaB5Ue-zHhBzwwiQf0",
+            authDomain: "indigra-578df.firebaseapp.com",
+            databaseURL: "https://indigra-578df-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "indigra-578df",
+            storageBucket: "indigra-578df.appspot.com",
+            messagingSenderId: "819436341016",
+            appId: "1:819436341016:web:c3e2029ce5f0b8055d806d",
+            measurementId: "G-T6VNYJLXBN"
+        };
+
+        // Инициализация Firebase
+        let app, auth, database;
+        try {
+            app = firebase.initializeApp(firebaseConfig);
+            auth = firebase.auth();
+            database = firebase.database();
+            console.log("Firebase инициализирован успешно");
+        } catch (error) {
+            console.error("Ошибка инициализации Firebase:", error);
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
-            const daysOfWeek = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
-            const numbers = [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4];
+            const daysOfWeek = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+            const numbers = [1, 1, 1, 2, 2, 2, 3, 3, 3];
+            const adminNumbers = [1, 1, 1, 2, 2, 2, 3, 3, 3];
             const container = document.getElementById('days-container');
+            const adminRow = document.getElementById('admin-row');
             const today = new Date();
-            const todayDayOfWeek = today.getDay(); // 0 - воскресенье, 1 - понедельник и т.д.
+            let todayDayOfWeek = today.getDay();
             
-            // Создаем контейнеры для каждого дня недели
-            daysOfWeek.forEach((dayName, index) => {
-                const dayContainer = document.createElement('div');
-                dayContainer.className = 'day-container';
+            const hybridBtn = document.getElementById('hybrid-btn');
+            const hybridLogin = document.getElementById('hybrid-login');
+            const hybridEmailInput = document.getElementById('hybrid-email');
+            const hybridPasswordInput = document.getElementById('hybrid-password');
+            const loginBtn = document.getElementById('login-btn');
+            const cancelBtn = document.getElementById('cancel-btn');
+            const syncStatus = document.getElementById('sync-status');
+            const logoutBtn = document.getElementById('logout-btn');
+            const rememberDeviceCheckbox = document.getElementById('remember-device');
+            
+            let isHybrid = false;
+            let selectedNumbers = JSON.parse(localStorage.getItem('selectedNumbers')) || {};
+            let currentDateKey = getDateKey();
+            let lastSyncTime = 0;
+            let syncInterval;
+            let refreshInterval;
+            let pageRefreshInterval;
+
+            // Генерация уникального идентификатора устройства
+            function getDeviceId() {
+                let deviceId = localStorage.getItem('deviceId');
+                if (!deviceId) {
+                    deviceId = 'device_' + Math.random().toString(36).substr(2, 9);
+                    localStorage.setItem('deviceId', deviceId);
+                }
+                return deviceId;
+            }
+
+            function getDateKey() {
+                const date = new Date();
+                return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+            }
+            
+            function updateSyncStatus(message) {
+                syncStatus.textContent = message;
+                console.log(message);
+            }
+            
+            function getDaysStartingFromToday() {
+                const reorderedDays = [];
+                for (let i = 0; i < 7; i++) {
+                    const dayIndex = (todayDayOfWeek + i) % 7;
+                    reorderedDays.push(daysOfWeek[dayIndex]);
+                }
+                return reorderedDays;
+            }
+
+            async function initFirebase() {
+                try {
+                    await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+                    console.log("Persistence установлен на LOCAL");
+                    
+                    // Проверка автоматического входа при инициализации
+                    await checkAutoLogin();
+                    
+                    setupRealtimeUpdates();
+                } catch (error) {
+                    console.error("Ошибка при установке persistence:", error);
+                    updateSyncStatus("Ошибка инициализации Firebase");
+                }
+            }
+            
+            async function checkPassword(email, password) {
+                try {
+                    if (!email || !password) {
+                        throw new Error("Email и пароль обязательны");
+                    }
+
+                    email = String(email).trim();
+                    password = String(password);
+
+                    await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+                    
+                    const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                    const userId = userCredential.user.uid;
+                    console.log("User UID:", userId);
+                    
+                    if (ADMIN_UIDS.includes(userId)) {
+                        if (rememberDeviceCheckbox.checked) {
+                            const deviceInfo = {
+                                deviceId: getDeviceId(),
+                                email: email,
+                                lastLogin: Date.now()
+                            };
+                            
+                            localStorage.setItem('adminDevice', JSON.stringify(deviceInfo));
+                            
+                            try {
+                                await database.ref('adminDevices/' + deviceInfo.deviceId).set({
+                                    email: email,
+                                    lastLogin: deviceInfo.lastLogin,
+                                    uid: userId
+                                });
+                            } catch (dbError) {
+                                console.error("Ошибка сохранения устройства:", dbError);
+                            }
+                        }
+                        return true;
+                    }
+                    
+                    await auth.signOut();
+                    alert('Доступ разрешен только администратору');
+                    return false;
+                    
+                } catch (error) {
+                    console.error('Ошибка аутентификации:', error);
+                    
+                    let errorMessage = 'Ошибка входа';
+                    
+                    if (error.code === 'auth/internal-error' && error.message.includes('INVALID_LOGIN_CREDENTIALS')) {
+                        errorMessage = 'Неверные учетные данные';
+                    } else {
+                        switch(error.code) {
+                            case 'auth/wrong-password':
+                                errorMessage = 'Неверный пароль';
+                                break;
+                            case 'auth/user-not-found':
+                                errorMessage = 'Пользователь не найден';
+                                break;
+                            case 'auth/invalid-email':
+                                errorMessage = 'Неверный формат email';
+                                break;
+                            case 'auth/too-many-requests':
+                                errorMessage = 'Слишком много попыток. Попробуйте позже';
+                                break;
+                            case 'auth/user-disabled':
+                                errorMessage = 'Аккаунт заблокирован';
+                                break;
+                            default:
+                                errorMessage = 'Ошибка при входе';
+                        }
+                    }
+                    
+                    alert(errorMessage);
+                    return false;
+                }
+            }
+
+            async function checkAutoLogin() {
+                try {
+                    const savedDeviceInfo = localStorage.getItem('adminDevice');
+                    if (!savedDeviceInfo) return false;
+                    
+                    let deviceInfo;
+                    try {
+                        deviceInfo = JSON.parse(savedDeviceInfo);
+                        if (!deviceInfo.deviceId || !deviceInfo.email) {
+                            throw new Error("Неверный формат данных устройства");
+                        }
+                    } catch (e) {
+                        console.log("Ошибка парсинга данных устройства:", e);
+                        localStorage.removeItem('adminDevice');
+                        return false;
+                    }
+                    
+                    const currentDeviceId = getDeviceId();
+                    if (deviceInfo.deviceId !== currentDeviceId) {
+                        console.log("Device ID не совпадает");
+                        return false;
+                    }
+                    
+                    try {
+                        const snapshot = await database.ref('adminDevices/' + deviceInfo.deviceId).once('value');
+                        const firebaseDeviceInfo = snapshot.val();
+                        
+                        if (!firebaseDeviceInfo) {
+                            console.log("Информация об устройстве не найдена в Firebase");
+                            return false;
+                        }
+                        
+                        try {
+                            await auth.signInWithEmailAndPassword(deviceInfo.email, "dummy_password");
+                        } catch (error) {
+                            if (error.code === 'auth/wrong-password') {
+                                console.log("Автоматический вход требует ввода пароля");
+                                return false;
+                            }
+                            throw error;
+                        }
+                        
+                        const user = auth.currentUser;
+                        if (user && ADMIN_UIDS.includes(user.uid)) {
+                            isHybrid = true;
+                            hybridBtn.classList.add('hidden');
+                            logoutBtn.classList.remove('hidden');
+                            createDaysInterface();
+                            updateSyncStatus('Автоматический вход выполнен');
+                            return true;
+                        }
+                        
+                        return false;
+                    } catch (error) {
+                        console.log("Ошибка автоматического входа:", error);
+                        return false;
+                    }
+                } catch (error) {
+                    console.log("Ошибка в checkAutoLogin:", error);
+                    return false;
+                }
+            }
+
+            function setupRealtimeUpdates() {
+                if (refreshInterval) clearInterval(refreshInterval);
+                if (pageRefreshInterval) clearInterval(pageRefreshInterval);
+                if (syncInterval) clearInterval(syncInterval);
+
+                database.ref('hybridData').on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    
+                    if (data) {
+                        if (!lastSyncTime || data.lastUpdated > lastSyncTime) {
+                            selectedNumbers = data.selectedNumbers || {};
+                            lastSyncTime = data.lastUpdated;
+                            
+                            localStorage.setItem('selectedNumbers', JSON.stringify(selectedNumbers));
+                            localStorage.setItem('lastSyncTime', lastSyncTime.toString());
+                            
+                            updateSyncStatus('Данные обновлены: ' + new Date(data.lastUpdated).toLocaleTimeString());
+                            createDaysInterface();
+                        }
+                    } else {
+                        updateSyncStatus('Нет данных на сервере');
+                    }
+                }, (error) => {
+                    console.error('Ошибка прослушивания:', error);
+                    updateSyncStatus('Ошибка подключения к серверу');
+                });
+            }
+
+            async function saveDataToFirebase() {
+                try {
+                    const data = {
+                        selectedNumbers: selectedNumbers,
+                        lastUpdated: Date.now()
+                    };
+                    
+                    await database.ref('hybridData').set(data);
+                    updateSyncStatus('Данные сохранены: ' + new Date().toLocaleTimeString());
+                } catch (error) {
+                    console.error('Ошибка сохранения данных:', error);
+                    updateSyncStatus('Ошибка сохранения данных');
+                }
+            }
+
+            async function loadInitialData() {
+                try {
+                    const snapshot = await database.ref('hybridData').once('value');
+                    const data = snapshot.val();
+
+                    if (data) {
+                        selectedNumbers = data.selectedNumbers || {};
+                        lastSyncTime = data.lastUpdated;
+                        
+                        localStorage.setItem('selectedNumbers', JSON.stringify(selectedNumbers));
+                        localStorage.setItem('lastSyncTime', lastSyncTime.toString());
+                        
+                        updateSyncStatus('Данные загружены: ' + new Date(data.lastUpdated).toLocaleTimeString());
+                        return true;
+                    } else {
+                        updateSyncStatus('Нет данных на сервере');
+                        return false;
+                    }
+                } catch (error) {
+                    console.error('Ошибка загрузки:', error);
+                    updateSyncStatus('Ошибка загрузки данных');
+                    return false;
+                }
+            }
+            
+            function saveData() {
+                localStorage.setItem('hybridStatus', isHybrid ? 'true' : 'false');
+                localStorage.setItem('selectedNumbers', JSON.stringify(selectedNumbers));
                 
-                const dayTitle = document.createElement('div');
-                dayTitle.className = 'day-title';
+                if (isHybrid) {
+                    saveDataToFirebase();
+                }
+            }
+            
+            function createAdminRow() {
+                adminRow.innerHTML = '';
                 
-                // Рассчитываем дату для этого дня недели
-                const dayDate = new Date(today);
-                let diff = index - todayDayOfWeek + 1;
-                if (todayDayOfWeek === 0) diff = index + 1; // для воскресенья
-                if (diff < 0) diff += 7;
-                dayDate.setDate(today.getDate() + diff);
+                const title = document.createElement('div');
+                title.className = 'day-title';
+                title.textContent = 'Администратор (выделить все дни):';
+                adminRow.appendChild(title);
                 
-                const dateStr = dayDate.toLocaleDateString('ru-RU');
-                dayTitle.textContent = `${dayName} ${dateStr}`;
-                
-                dayContainer.appendChild(dayTitle);
-                
-                // Добавляем цифры
-                numbers.forEach(num => {
+                adminNumbers.forEach((num, numIndex) => {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'number-wrapper';
+                    
                     const numberElement = document.createElement('div');
                     numberElement.className = 'number';
                     numberElement.textContent = num;
-                    numberElement.dataset.day = index;
+                    numberElement.dataset.num = num;
+                    numberElement.dataset.index = numIndex;
+                    
+                    if ((numIndex + 1) % 3 === 0) {
+                        numberElement.classList.add('special');
+                    }
+                    
                     numberElement.addEventListener('click', function() {
-                        // Удаляем класс selected у всех цифр этого дня
-                        const allNumbersThisDay = document.querySelectorAll(`.number[data-day="${index}"]`);
-                        allNumbersThisDay.forEach(el => el.classList.remove('selected'));
+                        const num = this.dataset.num;
+                        const numIndex = this.dataset.index;
                         
-                        // Добавляем класс selected к выбранной цифре
-                        this.classList.add('selected');
+                        const allNumberElements = document.querySelectorAll('.number');
+                        let anySelected = false;
                         
-                        // Сохраняем в localStorage
-                        localStorage.setItem(`selectedNumber-${index}-${dateStr}`, this.textContent);
+                        allNumberElements.forEach(el => {
+                            if (el.dataset.num === num && el.dataset.index === numIndex && el.classList.contains('selected')) {
+                                anySelected = true;
+                            }
+                        });
+                        
+                        allNumberElements.forEach(el => {
+                            if (el.dataset.num === num && el.dataset.index === numIndex) {
+                                const day = el.dataset.day;
+                                const key = `${day}_${num}_${numIndex}`;
+                                
+                                if (anySelected) {
+                                    el.classList.remove('selected');
+                                    delete selectedNumbers[key];
+                                } else {
+                                    el.classList.add('selected');
+                                    selectedNumbers[key] = true;
+                                }
+                            }
+                        });
+                        
+                        saveData();
                     });
                     
-                    dayContainer.appendChild(numberElement);
+                    const label = document.createElement('div');
+                    label.className = 'number-label';
+                    label.textContent = (numIndex + 1) % 3 === 0 ? '8/28' : '7/24';
+                    
+                    wrapper.appendChild(numberElement);
+                    wrapper.appendChild(label);
+                    adminRow.appendChild(wrapper);
+                });
+            }
+            
+            function createDaysInterface() {
+                container.innerHTML = '';
+                const daysToShow = getDaysStartingFromToday();
+                
+                daysToShow.forEach((dayName, i) => {
+                    const dayContainer = document.createElement('div');
+                    dayContainer.className = 'day-container';
+                    
+                    const dayTitle = document.createElement('div');
+                    dayTitle.className = 'day-title';
+                    
+                    const dayDate = new Date(today);
+                    dayDate.setDate(today.getDate() + i);
+                    
+                    const dateStr = dayDate.toLocaleDateString('ru-RU');
+                    dayTitle.textContent = `${dayName} ${dateStr}`;
+                    
+                    if (i === 0) {
+                        dayTitle.classList.add('today-highlight');
+                    }
+                    
+                    dayContainer.appendChild(dayTitle);
+                    
+                    for (let group = 0; group < 3; group++) {
+                        const groupContainer = document.createElement('div');
+                        groupContainer.className = 'number-group';
+                        
+                        for (let j = 0; j < 3; j++) {
+                            const numIndex = group * 3 + j;
+                            const num = numbers[numIndex];
+                            
+                            const wrapper = document.createElement('div');
+                            wrapper.className = 'number-wrapper';
+                            
+                            const numberElement = document.createElement('div');
+                            numberElement.className = 'number';
+                            numberElement.textContent = num;
+                            const originalDayIndex = (todayDayOfWeek + i) % 7;
+                            numberElement.dataset.day = originalDayIndex;
+                            numberElement.dataset.num = num;
+                            numberElement.dataset.index = numIndex;
+                            
+                            if ((numIndex + 1) % 3 === 0) {
+                                numberElement.classList.add('special');
+                            }
+                            
+                            const key = `${originalDayIndex}_${num}_${numIndex}`;
+                            if (selectedNumbers[key]) {
+                                numberElement.classList.add('selected');
+                            }
+                            
+                            if (!isHybrid) {
+                                numberElement.classList.add('readonly');
+                            } else {
+                                numberElement.addEventListener('click', function() {
+                                    const day = this.dataset.day;
+                                    const num = this.dataset.num;
+                                    const numIndex = this.dataset.index;
+                                    const key = `${day}_${num}_${numIndex}`;
+                                    
+                                    this.classList.toggle('selected');
+                                    
+                                    if (this.classList.contains('selected')) {
+                                        selectedNumbers[key] = true;
+                                    } else {
+                                        delete selectedNumbers[key];
+                                    }
+                                    
+                                    saveData();
+                                });
+                            }
+                            
+                            const label = document.createElement('div');
+                            label.className = 'number-label';
+                            label.textContent = (numIndex + 1) % 3 === 0 ? '8/28' : '7/24';
+                            
+                            wrapper.appendChild(numberElement);
+                            wrapper.appendChild(label);
+                            groupContainer.appendChild(wrapper);
+                        }
+                        
+                        dayContainer.appendChild(groupContainer);
+                    }
+                    
+                    container.appendChild(dayContainer);
                 });
                 
-                container.appendChild(dayContainer);
-            });
+                if (isHybrid) {
+                    adminRow.classList.remove('hidden');
+                    createAdminRow();
+                    hybridBtn.classList.add('hidden');
+                    logoutBtn.classList.remove('hidden');
+                } else {
+                    adminRow.classList.add('hidden');
+                    hybridBtn.classList.remove('hidden');
+                    logoutBtn.classList.add('hidden');
+                }
+            }
             
-            // Проверяем localStorage для восстановления выбранных цифр
-            checkSelectedNumbers();
+            function startSyncInterval() {
+                syncInterval = setInterval(async () => {
+                    if (!isHybrid) {
+                        await loadInitialData();
+                    }
+                }, 30000);
+            }
             
-            // Проверяем время и обновляем даты при необходимости
-            checkDateUpdate();
-            
-            // Проверяем каждую минуту, не настала ли полночь
-            setInterval(checkDateUpdate, 60000);
-        });
-        
-        function checkSelectedNumbers() {
-            const numberElements = document.querySelectorAll('.number');
-            const dayTitles = document.querySelectorAll('.day-title');
-            
-            dayTitles.forEach((title, dayIndex) => {
-                const dateStr = title.textContent.split(' ').pop();
-                const selectedNumber = localStorage.getItem(`selectedNumber-${dayIndex}-${dateStr}`);
-                
-                if (selectedNumber) {
-                    numberElements.forEach(el => {
-                        if (el.dataset.day == dayIndex && el.textContent === selectedNumber) {
-                            el.classList.add('selected');
+            function checkDateChange() {
+                const newDateKey = getDateKey();
+                if (newDateKey !== currentDateKey) {
+                    const todayIndex = new Date().getDay();
+                    Object.keys(selectedNumbers).forEach(key => {
+                        const [dayIndexStr] = key.split('_');
+                        const dayIndex = parseInt(dayIndexStr);
+                        
+                        if (dayIndex === todayIndex) {
+                            delete selectedNumbers[key];
                         }
                     });
+                    
+                    localStorage.setItem('selectedNumbers', JSON.stringify(selectedNumbers));
+                    currentDateKey = newDateKey;
+                    todayDayOfWeek = todayIndex;
+                    createDaysInterface();
+                    saveData();
+                    
+                    updateSyncStatus('Дата изменилась, сброшены кнопки для текущего дня');
+                }
+            }
+            
+            // Обработчики событий
+            hybridBtn.addEventListener('click', function() {
+                hybridLogin.classList.remove('hidden');
+                const savedDeviceInfo = localStorage.getItem('adminDevice');
+                if (savedDeviceInfo) {
+                    try {
+                        const deviceInfo = JSON.parse(savedDeviceInfo);
+                        hybridEmailInput.value = deviceInfo.email;
+                        hybridPasswordInput.focus();
+                    } catch (e) {
+                        console.log("Ошибка чтения сохраненных данных устройства", e);
+                    }
                 }
             });
-        }
-        
-        function checkDateUpdate() {
-            const now = new Date();
-            const hours = now.getHours();
-            const minutes = now.getMinutes();
             
-            // Если сейчас между 00:00 и 00:01, обновляем страницу
-            if (hours === 0 && minutes <= 1) {
-                // Очищаем выбранные цифры для всех дней
-                const numberElements = document.querySelectorAll('.number');
-                numberElements.forEach(el => {
-                    el.classList.remove('selected');
-                });
+            cancelBtn.addEventListener('click', function() {
+                hybridLogin.classList.add('hidden');
+                hybridEmailInput.value = '';
+                hybridPasswordInput.value = '';
+            });
+            
+            loginBtn.addEventListener('click', async function() {
+                const email = hybridEmailInput.value.trim();
+                const password = hybridPasswordInput.value.trim();
                 
-                // Обновляем страницу, чтобы показать новые даты
-                location.reload();
+                if (!email || !password) {
+                    alert('Пожалуйста, введите email и пароль');
+                    return;
+                }
+                
+                const isValid = await checkPassword(email, password);
+                
+                if (isValid) {
+                    isHybrid = true;
+                    hybridLogin.classList.add('hidden');
+                    hybridEmailInput.value = '';
+                    hybridPasswordInput.value = '';
+                    
+                    saveData();
+                    createDaysInterface();
+                }
+            });
+
+            logoutBtn.addEventListener('click', async function() {
+                try {
+                    await auth.signOut();
+                    
+                    // Удаляем информацию об устройстве
+                    const savedDeviceInfo = localStorage.getItem('adminDevice');
+                    if (savedDeviceInfo) {
+                        try {
+                            const deviceInfo = JSON.parse(savedDeviceInfo);
+                            if (deviceInfo.deviceId) {
+                                await database.ref('adminDevices/' + deviceInfo.deviceId).remove()
+                                    .catch(e => console.log("Не удалось удалить устройство из Firebase", e));
+                            }
+                        } catch (e) {
+                            console.log("Ошибка парсинга deviceInfo", e);
+                        }
+                    }
+                    
+                    localStorage.removeItem('adminDevice');
+                    updateSyncStatus('Администратор вышел из системы');
+                    isHybrid = false;
+                    createDaysInterface();
+                } catch (error) {
+                    console.error('Ошибка выхода:', error);
+                    alert('Ошибка при выходе: ' + error.message);
+                }
+            });
+
+            // Инициализация
+            try {
+                initFirebase().then(() => {
+                    loadInitialData().then(() => {
+                        createDaysInterface();
+                        setInterval(checkDateChange, 60000);
+                        startSyncInterval();
+                    }).catch(error => {
+                        console.error("Ошибка загрузки данных:", error);
+                        updateSyncStatus("Ошибка загрузки данных");
+                    });
+                }).catch(error => {
+                    console.error("Ошибка инициализации Firebase:", error);
+                    updateSyncStatus("Ошибка подключения к Firebase");
+                });
+            } catch (e) {
+                console.error("Глобальная ошибка инициализации:", e);
+                updateSyncStatus("Критическая ошибка при запуске");
             }
-        }
+        });
     </script>
 </body>
 </html>

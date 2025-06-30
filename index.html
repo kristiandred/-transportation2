@@ -144,6 +144,11 @@
         .admin-row.hidden {
             display: none;
         }
+        .error-message {
+            color: #f44336;
+            margin: 10px 0;
+            text-align: center;
+        }
         @media (max-width: 600px) {
             body {
                 padding: 10px;
@@ -163,14 +168,13 @@
                 justify-content: center;
             }
         }
-         
     </style>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app-check.js"></script>
 </head>
 <body>
-     
     <h1>Свободные гибриды Индигра</h1>
     
     <button id="hybrid-btn" class="hybrid-btn">🔰 Гибрид</button>
@@ -201,6 +205,7 @@
     <div id="hybrid-login" class="hybrid-login hidden">
         <div class="hybrid-login-content">
             <h3>Вход для администратора</h3>
+            <div id="login-error" class="error-message hidden"></div>
             <input type="email" id="hybrid-email" placeholder="Введите email">
             <input type="password" id="hybrid-password" placeholder="Введите пароль">
             <div style="margin-top: 10px;">
@@ -216,592 +221,653 @@
     <button id="logout-btn" class="hybrid-btn hidden" style="right: 120px;">🚪 Выйти</button>
 
     <script>
-        const ADMIN_UIDS = ['DegfORMmNnQB09KJG3NOd1Cf61D2'];
-        // Конфигурация Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyBar6H-aFq-vB8fFRaB5Ue-zHhBzwwiQf0",
-            authDomain: "indigra-578df.firebaseapp.com",
-            databaseURL: "https://indigra-578df-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "indigra-578df",
-            storageBucket: "indigra-578df.appspot.com",
-            messagingSenderId: "819436341016",
-            appId: "1:819436341016:web:c3e2029ce5f0b8055d806d",
-            measurementId: "G-T6VNYJLXBN"
+        // 1. Конфигурация будет загружаться динамически
+        let firebaseConfig = {};
+        let ADMIN_UIDS = [];
+        let app, auth, database;
+
+        // 2. Состояние приложения
+        const appState = {
+            isHybrid: false,
+            selectedNumbers: JSON.parse(localStorage.getItem('selectedNumbers')) || {},
+            currentDateKey: getDateKey(),
+            lastSyncTime: 0,
+            intervals: {}
         };
 
-        // Инициализация Firebase
-        let app, auth, database;
-        try {
-            app = firebase.initializeApp(firebaseConfig);
-            auth = firebase.auth();
-            database = firebase.database();
-            console.log("Firebase инициализирован успешно");
-        } catch (error) {
-            console.error("Ошибка инициализации Firebase:", error);
+        // 3. Загрузка конфигурации
+        fetch('/firebase-config.json')
+            .then(response => response.json())
+            .then(config => {
+                firebaseConfig = config;
+                ADMIN_UIDS = config.adminUids || [];
+                initializeFirebase();
+            })
+            .catch(error => {
+                console.error("Ошибка загрузки конфигурации:", error);
+                // Резервная конфигурация (удалить после тестирования)
+                firebaseConfig = {
+                    apiKey: "AIzaSyBar6H-aFq-vB8fFRaB5Ue-zHhBzwwiQf0",
+                    authDomain: "indigra-578df.firebaseapp.com",
+                    databaseURL: "https://indigra-578df-default-rtdb.europe-west1.firebasedatabase.app",
+                    projectId: "indigra-578df",
+                    storageBucket: "indigra-578df.appspot.com",
+                    messagingSenderId: "819436341016",
+                    appId: "1:819436341016:web:c3e2029ce5f0b8055d806d",
+                    measurementId: "G-T6VNYJLXBN",
+                    appCheckKey: "6Lc456ApAAAAANv-dJw9k8p8e7yY4Y1Y2Y3Y4Y5Y"
+                };
+                ADMIN_UIDS = ['DegfORMmNnQB09KJG3NOd1Cf61D2'];
+                initializeFirebase();
+            });
+
+        // 4. Инициализация Firebase
+        function initializeFirebase() {
+            try {
+                app = firebase.initializeApp(firebaseConfig);
+                auth = firebase.auth();
+                database = firebase.database();
+                
+                // Включаем App Check если настроен
+                if (firebaseConfig.appCheckKey) {
+                    const appCheck = firebase.appCheck().activate(
+                        firebaseConfig.appCheckKey,
+                        { isTokenAutoRefreshEnabled: true }
+                    );
+                }
+
+                console.log("Firebase инициализирован успешно");
+                initApp();
+            } catch (error) {
+                console.error("Ошибка инициализации Firebase:", error);
+                showErrorToUser("Ошибка подключения к серверу");
+            }
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const daysOfWeek = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
-            const numbers = [1, 1, 1, 2, 2, 2, 3, 3, 3];
-            const adminNumbers = [1, 1, 1, 2, 2, 2, 3, 3, 3];
-            const container = document.getElementById('days-container');
-            const adminRow = document.getElementById('admin-row');
-            const today = new Date();
-            let todayDayOfWeek = today.getDay();
-            
-            const hybridBtn = document.getElementById('hybrid-btn');
-            const hybridLogin = document.getElementById('hybrid-login');
-            const hybridEmailInput = document.getElementById('hybrid-email');
-            const hybridPasswordInput = document.getElementById('hybrid-password');
-            const loginBtn = document.getElementById('login-btn');
-            const cancelBtn = document.getElementById('cancel-btn');
-            const syncStatus = document.getElementById('sync-status');
-            const logoutBtn = document.getElementById('logout-btn');
-            const rememberDeviceCheckbox = document.getElementById('remember-device');
-            
-            let isHybrid = false;
-            let selectedNumbers = JSON.parse(localStorage.getItem('selectedNumbers')) || {};
-            let currentDateKey = getDateKey();
-            let lastSyncTime = 0;
-            let syncInterval;
-            let refreshInterval;
-            let pageRefreshInterval;
+        // 5. Основная инициализация приложения
+        function initApp() {
+            document.addEventListener('DOMContentLoaded', function() {
+                const daysOfWeek = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+                const numbers = [1, 1, 1, 2, 2, 2, 3, 3, 3];
+                const adminNumbers = [1, 1, 1, 2, 2, 2, 3, 3, 3];
+                
+                // Получаем элементы DOM
+                const elements = {
+                    container: document.getElementById('days-container'),
+                    adminRow: document.getElementById('admin-row'),
+                    hybridBtn: document.getElementById('hybrid-btn'),
+                    hybridLogin: document.getElementById('hybrid-login'),
+                    hybridEmailInput: document.getElementById('hybrid-email'),
+                    hybridPasswordInput: document.getElementById('hybrid-password'),
+                    loginBtn: document.getElementById('login-btn'),
+                    cancelBtn: document.getElementById('cancel-btn'),
+                    syncStatus: document.getElementById('sync-status'),
+                    logoutBtn: document.getElementById('logout-btn'),
+                    rememberDeviceCheckbox: document.getElementById('remember-device'),
+                    loginError: document.getElementById('login-error')
+                };
 
-            // Генерация уникального идентификатора устройства
-            function getDeviceId() {
-                let deviceId = localStorage.getItem('deviceId');
-                if (!deviceId) {
-                    deviceId = 'device_' + Math.random().toString(36).substr(2, 9);
-                    localStorage.setItem('deviceId', deviceId);
-                }
-                return deviceId;
-            }
+                const today = new Date();
+                let todayDayOfWeek = today.getDay();
 
-            function getDateKey() {
-                const date = new Date();
-                return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-            }
-            
-            function updateSyncStatus(message) {
-                syncStatus.textContent = message;
-                console.log(message);
-            }
-            
-            function getDaysStartingFromToday() {
-                const reorderedDays = [];
-                for (let i = 0; i < 7; i++) {
-                    const dayIndex = (todayDayOfWeek + i) % 7;
-                    reorderedDays.push(daysOfWeek[dayIndex]);
-                }
-                return reorderedDays;
-            }
-
-            async function initFirebase() {
-                try {
-                    await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-                    console.log("Persistence установлен на LOCAL");
-                    
-                    // Проверка автоматического входа при инициализации
-                    await checkAutoLogin();
-                    
-                    setupRealtimeUpdates();
-                } catch (error) {
-                    console.error("Ошибка при установке persistence:", error);
-                    updateSyncStatus("Ошибка инициализации Firebase");
-                }
-            }
-            
-            async function checkPassword(email, password) {
-                try {
-                    if (!email || !password) {
-                        throw new Error("Email и пароль обязательны");
-                    }
-
-                    email = String(email).trim();
-                    password = String(password);
-
-                    await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-                    
-                    const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                    const userId = userCredential.user.uid;
-                    console.log("User UID:", userId);
-                    
-                    if (ADMIN_UIDS.includes(userId)) {
-                        if (rememberDeviceCheckbox.checked) {
-                            const deviceInfo = {
-                                deviceId: getDeviceId(),
-                                email: email,
-                                lastLogin: Date.now()
-                            };
-                            
-                            localStorage.setItem('adminDevice', JSON.stringify(deviceInfo));
-                            
-                            try {
-                                await database.ref('adminDevices/' + deviceInfo.deviceId).set({
-                                    email: email,
-                                    lastLogin: deviceInfo.lastLogin,
-                                    uid: userId
-                                });
-                            } catch (dbError) {
-                                console.error("Ошибка сохранения устройства:", dbError);
-                            }
-                        }
-                        return true;
-                    }
-                    
-                    await auth.signOut();
-                    alert('Доступ разрешен только администратору');
-                    return false;
-                    
-                } catch (error) {
-                    console.error('Ошибка аутентификации:', error);
-                    
-                    let errorMessage = 'Ошибка входа';
-                    
-                    if (error.code === 'auth/internal-error' && error.message.includes('INVALID_LOGIN_CREDENTIALS')) {
-                        errorMessage = 'Неверные учетные данные';
-                    } else {
-                        switch(error.code) {
-                            case 'auth/wrong-password':
-                                errorMessage = 'Неверный пароль';
-                                break;
-                            case 'auth/user-not-found':
-                                errorMessage = 'Пользователь не найден';
-                                break;
-                            case 'auth/invalid-email':
-                                errorMessage = 'Неверный формат email';
-                                break;
-                            case 'auth/too-many-requests':
-                                errorMessage = 'Слишком много попыток. Попробуйте позже';
-                                break;
-                            case 'auth/user-disabled':
-                                errorMessage = 'Аккаунт заблокирован';
-                                break;
-                            default:
-                                errorMessage = 'Ошибка при входе';
-                        }
-                    }
-                    
-                    alert(errorMessage);
-                    return false;
-                }
-            }
-
-async function checkAutoLogin() {
-    try {
-        const savedDeviceInfo = localStorage.getItem('adminDevice');
-        if (!savedDeviceInfo) return false;
-        
-        let deviceInfo;
-        try {
-            deviceInfo = JSON.parse(savedDeviceInfo);
-            if (!deviceInfo.deviceId || !deviceInfo.email) {
-                throw new Error("Неверный формат данных устройства");
-            }
-        } catch (e) {
-            console.log("Ошибка парсинга данных устройства:", e);
-            localStorage.removeItem('adminDevice');
-            return false;
-        }
-        
-        const currentDeviceId = getDeviceId();
-        if (deviceInfo.deviceId !== currentDeviceId) {
-            console.log("Device ID не совпадает");
-            return false;
-        }
-        
-        try {
-            const snapshot = await database.ref('adminDevices/' + deviceInfo.deviceId).once('value');
-            const firebaseDeviceInfo = snapshot.val();
-            
-            if (!firebaseDeviceInfo) {
-                console.log("Информация об устройстве не найдена в Firebase");
-                return false;
-            }
-            
-            // Проверяем, что устройство зарегистрировано и UID соответствует администратору
-            if (firebaseDeviceInfo.uid && ADMIN_UIDS.includes(firebaseDeviceInfo.uid)) {
-                // Устанавливаем флаг администратора без попытки входа
-                isHybrid = true;
-                hybridBtn.classList.add('hidden');
-                logoutBtn.classList.remove('hidden');
+                // Инициализируем интерфейс
                 createDaysInterface();
-                updateSyncStatus('Автоматический вход выполнен');
-                return true;
-            }
-            
-            return false;
-        } catch (error) {
-            console.log("Ошибка автоматического входа:", error);
-            return false;
-        }
-    } catch (error) {
-        console.log("Ошибка в checkAutoLogin:", error);
-        return false;
-    }
-}
+                setupEventListeners();
+                startSyncInterval();
 
-            function setupRealtimeUpdates() {
-                if (refreshInterval) clearInterval(refreshInterval);
-                if (pageRefreshInterval) clearInterval(pageRefreshInterval);
-                if (syncInterval) clearInterval(syncInterval);
-
-                database.ref('hybridData').on('value', (snapshot) => {
-                    const data = snapshot.val();
-                    
-                    if (data) {
-                        if (!lastSyncTime || data.lastUpdated > lastSyncTime) {
-                            selectedNumbers = data.selectedNumbers || {};
-                            lastSyncTime = data.lastUpdated;
-                            
-                            localStorage.setItem('selectedNumbers', JSON.stringify(selectedNumbers));
-                            localStorage.setItem('lastSyncTime', lastSyncTime.toString());
-                            
-                            updateSyncStatus('Данные обновлены: ' + new Date(data.lastUpdated).toLocaleTimeString());
-                            createDaysInterface();
-                        }
-                    } else {
-                        updateSyncStatus('Нет данных на сервере');
+                function getDeviceId() {
+                    let deviceId = localStorage.getItem('deviceId');
+                    if (!deviceId) {
+                        deviceId = 'device_' + Math.random().toString(36).substr(2, 9);
+                        localStorage.setItem('deviceId', deviceId);
                     }
-                }, (error) => {
-                    console.error('Ошибка прослушивания:', error);
-                    updateSyncStatus('Ошибка подключения к серверу');
-                });
-            }
-
-            async function saveDataToFirebase() {
-                try {
-                    const data = {
-                        selectedNumbers: selectedNumbers,
-                        lastUpdated: Date.now()
-                    };
-                    
-                    await database.ref('hybridData').set(data);
-                    updateSyncStatus('Данные сохранены: ' + new Date().toLocaleTimeString());
-                } catch (error) {
-                    console.error('Ошибка сохранения данных:', error);
-                    updateSyncStatus('Ошибка сохранения данных');
+                    return deviceId;
                 }
-            }
 
-            async function loadInitialData() {
-                try {
-                    const snapshot = await database.ref('hybridData').once('value');
-                    const data = snapshot.val();
+                function getDateKey() {
+                    const date = new Date();
+                    return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+                }
+                
+                function updateSyncStatus(message) {
+                    elements.syncStatus.textContent = message;
+                    console.log(message);
+                }
+                
+                function showErrorToUser(message) {
+                    elements.loginError.textContent = message;
+                    elements.loginError.classList.remove('hidden');
+                }
+                
+                function hideError() {
+                    elements.loginError.classList.add('hidden');
+                }
+                
+                function getDaysStartingFromToday() {
+                    const reorderedDays = [];
+                    for (let i = 0; i < 7; i++) {
+                        const dayIndex = (todayDayOfWeek + i) % 7;
+                        reorderedDays.push(daysOfWeek[dayIndex]);
+                    }
+                    return reorderedDays;
+                }
 
-                    if (data) {
-                        selectedNumbers = data.selectedNumbers || {};
-                        lastSyncTime = data.lastUpdated;
-                        
-                        localStorage.setItem('selectedNumbers', JSON.stringify(selectedNumbers));
-                        localStorage.setItem('lastSyncTime', lastSyncTime.toString());
-                        
-                        updateSyncStatus('Данные загружены: ' + new Date(data.lastUpdated).toLocaleTimeString());
-                        return true;
-                    } else {
-                        updateSyncStatus('Нет данных на сервере');
+                async function initFirebaseAuth() {
+                    try {
+                        await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+                        console.log("Persistence установлен на LOCAL");
+                        await checkAutoLogin();
+                        setupRealtimeUpdates();
+                    } catch (error) {
+                        console.error("Ошибка при установке persistence:", error);
+                        updateSyncStatus("Ошибка инициализации Firebase");
+                    }
+                }
+
+                // Проверка администратора
+                async function verifyAdmin(user) {
+                    if (!user) return false;
+                    
+                    // Проверяем кэш
+                    if (ADMIN_UIDS.includes(user.uid)) return true;
+                    
+                    // Дополнительная проверка из базы данных
+                    try {
+                        const snapshot = await database.ref(`adminUsers/${user.uid}`).once('value');
+                        return snapshot.exists();
+                    } catch (error) {
+                        console.error("Ошибка проверки прав:", error);
                         return false;
                     }
-                } catch (error) {
-                    console.error('Ошибка загрузки:', error);
-                    updateSyncStatus('Ошибка загрузки данных');
-                    return false;
                 }
-            }
-            
-            function saveData() {
-                localStorage.setItem('hybridStatus', isHybrid ? 'true' : 'false');
-                localStorage.setItem('selectedNumbers', JSON.stringify(selectedNumbers));
-                
-                if (isHybrid) {
-                    saveDataToFirebase();
-                }
-            }
-            
-            function createAdminRow() {
-                adminRow.innerHTML = '';
-                
-                const title = document.createElement('div');
-                title.className = 'day-title';
-                title.textContent = 'Администратор (выделить все дни):';
-                adminRow.appendChild(title);
-                
-                adminNumbers.forEach((num, numIndex) => {
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'number-wrapper';
-                    
-                    const numberElement = document.createElement('div');
-                    numberElement.className = 'number';
-                    numberElement.textContent = num;
-                    numberElement.dataset.num = num;
-                    numberElement.dataset.index = numIndex;
-                    
-                    if ((numIndex + 1) % 3 === 0) {
-                        numberElement.classList.add('special');
-                    }
-                    
-                    numberElement.addEventListener('click', function() {
-                        const num = this.dataset.num;
-                        const numIndex = this.dataset.index;
-                        
-                        const allNumberElements = document.querySelectorAll('.number');
-                        let anySelected = false;
-                        
-                        allNumberElements.forEach(el => {
-                            if (el.dataset.num === num && el.dataset.index === numIndex && el.classList.contains('selected')) {
-                                anySelected = true;
-                            }
-                        });
-                        
-                        allNumberElements.forEach(el => {
-                            if (el.dataset.num === num && el.dataset.index === numIndex) {
-                                const day = el.dataset.day;
-                                const key = `${day}_${num}_${numIndex}`;
-                                
-                                if (anySelected) {
-                                    el.classList.remove('selected');
-                                    delete selectedNumbers[key];
-                                } else {
-                                    el.classList.add('selected');
-                                    selectedNumbers[key] = true;
-                                }
-                            }
-                        });
-                        
-                        saveData();
-                    });
-                    
-                    const label = document.createElement('div');
-                    label.className = 'number-label';
-                    label.textContent = (numIndex + 1) % 3 === 0 ? '8/28' : '7/24';
-                    
-                    wrapper.appendChild(numberElement);
-                    wrapper.appendChild(label);
-                    adminRow.appendChild(wrapper);
-                });
-            }
-            
-            function createDaysInterface() {
-                container.innerHTML = '';
-                const daysToShow = getDaysStartingFromToday();
-                
-                daysToShow.forEach((dayName, i) => {
-                    const dayContainer = document.createElement('div');
-                    dayContainer.className = 'day-container';
-                    
-                    const dayTitle = document.createElement('div');
-                    dayTitle.className = 'day-title';
-                    
-                    const dayDate = new Date(today);
-                    dayDate.setDate(today.getDate() + i);
-                    
-                    const dateStr = dayDate.toLocaleDateString('ru-RU');
-                    dayTitle.textContent = `${dayName} ${dateStr}`;
-                    
-                    if (i === 0) {
-                        dayTitle.classList.add('today-highlight');
-                    }
-                    
-                    dayContainer.appendChild(dayTitle);
-                    
-                    for (let group = 0; group < 3; group++) {
-                        const groupContainer = document.createElement('div');
-                        groupContainer.className = 'number-group';
-                        
-                        for (let j = 0; j < 3; j++) {
-                            const numIndex = group * 3 + j;
-                            const num = numbers[numIndex];
-                            
-                            const wrapper = document.createElement('div');
-                            wrapper.className = 'number-wrapper';
-                            
-                            const numberElement = document.createElement('div');
-                            numberElement.className = 'number';
-                            numberElement.textContent = num;
-                            const originalDayIndex = (todayDayOfWeek + i) % 7;
-                            numberElement.dataset.day = originalDayIndex;
-                            numberElement.dataset.num = num;
-                            numberElement.dataset.index = numIndex;
-                            
-                            if ((numIndex + 1) % 3 === 0) {
-                                numberElement.classList.add('special');
-                            }
-                            
-                            const key = `${originalDayIndex}_${num}_${numIndex}`;
-                            if (selectedNumbers[key]) {
-                                numberElement.classList.add('selected');
-                            }
-                            
-                            if (!isHybrid) {
-                                numberElement.classList.add('readonly');
-                            } else {
-                                numberElement.addEventListener('click', function() {
-                                    const day = this.dataset.day;
-                                    const num = this.dataset.num;
-                                    const numIndex = this.dataset.index;
-                                    const key = `${day}_${num}_${numIndex}`;
-                                    
-                                    this.classList.toggle('selected');
-                                    
-                                    if (this.classList.contains('selected')) {
-                                        selectedNumbers[key] = true;
-                                    } else {
-                                        delete selectedNumbers[key];
-                                    }
-                                    
-                                    saveData();
-                                });
-                            }
-                            
-                            const label = document.createElement('div');
-                            label.className = 'number-label';
-                            label.textContent = (numIndex + 1) % 3 === 0 ? '8/28' : '7/24';
-                            
-                            wrapper.appendChild(numberElement);
-                            wrapper.appendChild(label);
-                            groupContainer.appendChild(wrapper);
-                        }
-                        
-                        dayContainer.appendChild(groupContainer);
-                    }
-                    
-                    container.appendChild(dayContainer);
-                });
-                
-                if (isHybrid) {
-                    adminRow.classList.remove('hidden');
-                    createAdminRow();
-                    hybridBtn.classList.add('hidden');
-                    logoutBtn.classList.remove('hidden');
-                } else {
-                    adminRow.classList.add('hidden');
-                    hybridBtn.classList.remove('hidden');
-                    logoutBtn.classList.add('hidden');
-                }
-            }
-            
-            function startSyncInterval() {
-                syncInterval = setInterval(async () => {
-                    if (!isHybrid) {
-                        await loadInitialData();
-                    }
-                }, 30000);
-            }
-            
-            function checkDateChange() {
-                const newDateKey = getDateKey();
-                if (newDateKey !== currentDateKey) {
-                    const todayIndex = new Date().getDay();
-                    Object.keys(selectedNumbers).forEach(key => {
-                        const [dayIndexStr] = key.split('_');
-                        const dayIndex = parseInt(dayIndexStr);
-                        
-                        if (dayIndex === todayIndex) {
-                            delete selectedNumbers[key];
-                        }
-                    });
-                    
-                    localStorage.setItem('selectedNumbers', JSON.stringify(selectedNumbers));
-                    currentDateKey = newDateKey;
-                    todayDayOfWeek = todayIndex;
-                    createDaysInterface();
-                    saveData();
-                    
-                    updateSyncStatus('Дата изменилась, сброшены кнопки для текущего дня');
-                }
-            }
-            
-            // Обработчики событий
-            hybridBtn.addEventListener('click', function() {
-                hybridLogin.classList.remove('hidden');
-                const savedDeviceInfo = localStorage.getItem('adminDevice');
-                if (savedDeviceInfo) {
-                    try {
-                        const deviceInfo = JSON.parse(savedDeviceInfo);
-                        hybridEmailInput.value = deviceInfo.email;
-                        hybridPasswordInput.focus();
-                    } catch (e) {
-                        console.log("Ошибка чтения сохраненных данных устройства", e);
-                    }
-                }
-            });
-            
-            cancelBtn.addEventListener('click', function() {
-                hybridLogin.classList.add('hidden');
-                hybridEmailInput.value = '';
-                hybridPasswordInput.value = '';
-            });
-            
-            loginBtn.addEventListener('click', async function() {
-                const email = hybridEmailInput.value.trim();
-                const password = hybridPasswordInput.value.trim();
-                
-                if (!email || !password) {
-                    alert('Пожалуйста, введите email и пароль');
-                    return;
-                }
-                
-                const isValid = await checkPassword(email, password);
-                
-                if (isValid) {
-                    isHybrid = true;
-                    hybridLogin.classList.add('hidden');
-                    hybridEmailInput.value = '';
-                    hybridPasswordInput.value = '';
-                    
-                    saveData();
-                    createDaysInterface();
-                }
-            });
 
-            logoutBtn.addEventListener('click', async function() {
-                try {
-                    await auth.signOut();
+                // Обновленная функция авторизации
+                async function checkPassword(email, password) {
+                    try {
+                        // Валидация ввода
+                        if (!validateEmail(email) || !password) {
+                            throw new Error("Неверные учетные данные");
+                        }
+
+                        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                        const isAdmin = await verifyAdmin(userCredential.user);
+                        
+                        if (isAdmin) {
+                            if (elements.rememberDeviceCheckbox.checked) {
+                                await registerAdminDevice(userCredential.user);
+                            }
+                            return true;
+                        }
+                        
+                        await auth.signOut();
+                        showErrorToUser('Доступ разрешен только администратору');
+                        return false;
+                        
+                    } catch (error) {
+                        handleAuthError(error);
+                        return false;
+                    }
+                }
+
+                // Валидация email
+                function validateEmail(email) {
+                    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+                }
+
+                // Регистрация устройства админа
+                async function registerAdminDevice(user) {
+                    const deviceInfo = {
+                        deviceId: getDeviceId(),
+                        email: user.email,
+                        lastLogin: Date.now(),
+                        uid: user.uid
+                    };
                     
-                    // Удаляем информацию об устройстве
-                    const savedDeviceInfo = localStorage.getItem('adminDevice');
-                    if (savedDeviceInfo) {
+                    localStorage.setItem('adminDevice', JSON.stringify(deviceInfo));
+                    
+                    try {
+                        await database.ref(`adminDevices/${deviceInfo.deviceId}`).set({
+                            email: deviceInfo.email,
+                            lastLogin: deviceInfo.lastLogin,
+                            uid: deviceInfo.uid
+                        });
+                    } catch (error) {
+                        console.error("Ошибка сохранения устройства:", error);
+                    }
+                }
+
+                // Обработчик ошибок авторизации
+                function handleAuthError(error) {
+                    const errorMap = {
+                        'auth/wrong-password': 'Неверный пароль',
+                        'auth/user-not-found': 'Пользователь не найден',
+                        'auth/invalid-email': 'Неверный формат email',
+                        'auth/too-many-requests': 'Слишком много попыток. Попробуйте позже',
+                        'auth/user-disabled': 'Аккаунт заблокирован',
+                        'auth/internal-error': 'Неверные учетные данные'
+                    };
+                    
+                    const message = errorMap[error.code] || 'Ошибка при входе';
+                    showErrorToUser(message);
+                }
+
+                async function checkAutoLogin() {
+                    try {
+                        const savedDeviceInfo = localStorage.getItem('adminDevice');
+                        if (!savedDeviceInfo) return false;
+                        
+                        let deviceInfo;
                         try {
-                            const deviceInfo = JSON.parse(savedDeviceInfo);
-                            if (deviceInfo.deviceId) {
-                                await database.ref('adminDevices/' + deviceInfo.deviceId).remove()
-                                    .catch(e => console.log("Не удалось удалить устройство из Firebase", e));
+                            deviceInfo = JSON.parse(savedDeviceInfo);
+                            if (!deviceInfo.deviceId || !deviceInfo.email) {
+                                throw new Error("Неверный формат данных устройства");
                             }
                         } catch (e) {
-                            console.log("Ошибка парсинга deviceInfo", e);
+                            console.log("Ошибка парсинга данных устройства:", e);
+                            localStorage.removeItem('adminDevice');
+                            return false;
                         }
+                        
+                        const currentDeviceId = getDeviceId();
+                        if (deviceInfo.deviceId !== currentDeviceId) {
+                            console.log("Device ID не совпадает");
+                            return false;
+                        }
+                        
+                        try {
+                            const snapshot = await database.ref(`adminDevices/${deviceInfo.deviceId}`).once('value');
+                            const firebaseDeviceInfo = snapshot.val();
+                            
+                            if (!firebaseDeviceInfo) {
+                                console.log("Информация об устройстве не найдена в Firebase");
+                                return false;
+                            }
+                            
+                            if (firebaseDeviceInfo.uid && ADMIN_UIDS.includes(firebaseDeviceInfo.uid)) {
+                                appState.isHybrid = true;
+                                elements.hybridBtn.classList.add('hidden');
+                                elements.logoutBtn.classList.remove('hidden');
+                                createDaysInterface();
+                                updateSyncStatus('Автоматический вход выполнен');
+                                return true;
+                            }
+                            
+                            return false;
+                        } catch (error) {
+                            console.log("Ошибка автоматического входа:", error);
+                            return false;
+                        }
+                    } catch (error) {
+                        console.log("Ошибка в checkAutoLogin:", error);
+                        return false;
                     }
+                }
+
+                function setupRealtimeUpdates() {
+                    if (appState.intervals.refreshInterval) clearInterval(appState.intervals.refreshInterval);
+                    if (appState.intervals.pageRefreshInterval) clearInterval(appState.intervals.pageRefreshInterval);
+                    if (appState.intervals.syncInterval) clearInterval(appState.intervals.syncInterval);
+
+                    database.ref('hybridData').on('value', (snapshot) => {
+                        const data = snapshot.val();
+                        
+                        if (data) {
+                            if (!appState.lastSyncTime || data.lastUpdated > appState.lastSyncTime) {
+                                appState.selectedNumbers = data.selectedNumbers || {};
+                                appState.lastSyncTime = data.lastUpdated;
+                                
+                                localStorage.setItem('selectedNumbers', JSON.stringify(appState.selectedNumbers));
+                                localStorage.setItem('lastSyncTime', appState.lastSyncTime.toString());
+                                
+                                updateSyncStatus('Данные обновлены: ' + new Date(data.lastUpdated).toLocaleTimeString());
+                                createDaysInterface();
+                            }
+                        } else {
+                            updateSyncStatus('Нет данных на сервере');
+                        }
+                    }, (error) => {
+                        console.error('Ошибка прослушивания:', error);
+                        updateSyncStatus('Ошибка подключения к серверу');
+                    });
+                }
+
+                async function saveDataToFirebase() {
+                    try {
+                        const data = {
+                            selectedNumbers: appState.selectedNumbers,
+                            lastUpdated: Date.now()
+                        };
+                        
+                        await database.ref('hybridData').set(data);
+                        updateSyncStatus('Данные сохранены: ' + new Date().toLocaleTimeString());
+                    } catch (error) {
+                        console.error('Ошибка сохранения данных:', error);
+                        updateSyncStatus('Ошибка сохранения данных');
+                    }
+                }
+
+                async function loadInitialData() {
+                    try {
+                        const snapshot = await database.ref('hybridData').once('value');
+                        const data = snapshot.val();
+
+                        if (data) {
+                            appState.selectedNumbers = data.selectedNumbers || {};
+                            appState.lastSyncTime = data.lastUpdated;
+                            
+                            localStorage.setItem('selectedNumbers', JSON.stringify(appState.selectedNumbers));
+                            localStorage.setItem('lastSyncTime', appState.lastSyncTime.toString());
+                            
+                            updateSyncStatus('Данные загружены: ' + new Date(data.lastUpdated).toLocaleTimeString());
+                            return true;
+                        } else {
+                            updateSyncStatus('Нет данных на сервере');
+                            return false;
+                        }
+                    } catch (error) {
+                        console.error('Ошибка загрузки:', error);
+                        updateSyncStatus('Ошибка загрузки данных');
+                        return false;
+                    }
+                }
+                
+                function saveData() {
+                    localStorage.setItem('hybridStatus', appState.isHybrid ? 'true' : 'false');
+                    localStorage.setItem('selectedNumbers', JSON.stringify(appState.selectedNumbers));
                     
-                    localStorage.removeItem('adminDevice');
-                    updateSyncStatus('Администратор вышел из системы');
-                    isHybrid = false;
-                    createDaysInterface();
-                } catch (error) {
-                    console.error('Ошибка выхода:', error);
-                    alert('Ошибка при выходе: ' + error.message);
+                    if (appState.isHybrid) {
+                        saveDataToFirebase();
+                    }
+                }
+                
+                function createAdminRow() {
+                    elements.adminRow.innerHTML = '';
+                    
+                    const title = document.createElement('div');
+                    title.className = 'day-title';
+                    title.textContent = 'Администратор (выделить все дни):';
+                    elements.adminRow.appendChild(title);
+                    
+                    adminNumbers.forEach((num, numIndex) => {
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'number-wrapper';
+                        
+                        const numberElement = document.createElement('div');
+                        numberElement.className = 'number';
+                        numberElement.textContent = num;
+                        numberElement.dataset.num = num;
+                        numberElement.dataset.index = numIndex;
+                        
+                        if ((numIndex + 1) % 3 === 0) {
+                            numberElement.classList.add('special');
+                        }
+                        
+                        numberElement.addEventListener('click', function() {
+                            const num = this.dataset.num;
+                            const numIndex = this.dataset.index;
+                            
+                            const allNumberElements = document.querySelectorAll('.number');
+                            let anySelected = false;
+                            
+                            allNumberElements.forEach(el => {
+                                if (el.dataset.num === num && el.dataset.index === numIndex && el.classList.contains('selected')) {
+                                    anySelected = true;
+                                }
+                            });
+                            
+                            allNumberElements.forEach(el => {
+                                if (el.dataset.num === num && el.dataset.index === numIndex) {
+                                    const day = el.dataset.day;
+                                    const key = `${day}_${num}_${numIndex}`;
+                                    
+                                    if (anySelected) {
+                                        el.classList.remove('selected');
+                                        delete appState.selectedNumbers[key];
+                                    } else {
+                                        el.classList.add('selected');
+                                        appState.selectedNumbers[key] = true;
+                                    }
+                                }
+                            });
+                            
+                            saveData();
+                        });
+                        
+                        const label = document.createElement('div');
+                        label.className = 'number-label';
+                        label.textContent = (numIndex + 1) % 3 === 0 ? '8/28' : '7/24';
+                        
+                        wrapper.appendChild(numberElement);
+                        wrapper.appendChild(label);
+                        elements.adminRow.appendChild(wrapper);
+                    });
+                }
+                
+                function createDaysInterface() {
+                    elements.container.innerHTML = '';
+                    const daysToShow = getDaysStartingFromToday();
+                    
+                    daysToShow.forEach((dayName, i) => {
+                        const dayContainer = document.createElement('div');
+                        dayContainer.className = 'day-container';
+                        
+                        const dayTitle = document.createElement('div');
+                        dayTitle.className = 'day-title';
+                        
+                        const dayDate = new Date(today);
+                        dayDate.setDate(today.getDate() + i);
+                        
+                        const dateStr = dayDate.toLocaleDateString('ru-RU');
+                        dayTitle.textContent = `${dayName} ${dateStr}`;
+                        
+                        if (i === 0) {
+                            dayTitle.classList.add('today-highlight');
+                        }
+                        
+                        dayContainer.appendChild(dayTitle);
+                        
+                        for (let group = 0; group < 3; group++) {
+                            const groupContainer = document.createElement('div');
+                            groupContainer.className = 'number-group';
+                            
+                            for (let j = 0; j < 3; j++) {
+                                const numIndex = group * 3 + j;
+                                const num = numbers[numIndex];
+                                
+                                const wrapper = document.createElement('div');
+                                wrapper.className = 'number-wrapper';
+                                
+                                const numberElement = document.createElement('div');
+                                numberElement.className = 'number';
+                                numberElement.textContent = num;
+                                const originalDayIndex = (todayDayOfWeek + i) % 7;
+                                numberElement.dataset.day = originalDayIndex;
+                                numberElement.dataset.num = num;
+                                numberElement.dataset.index = numIndex;
+                                
+                                if ((numIndex + 1) % 3 === 0) {
+                                    numberElement.classList.add('special');
+                                }
+                                
+                                const key = `${originalDayIndex}_${num}_${numIndex}`;
+                                if (appState.selectedNumbers[key]) {
+                                    numberElement.classList.add('selected');
+                                }
+                                
+                                if (!appState.isHybrid) {
+                                    numberElement.classList.add('readonly');
+                                } else {
+                                    numberElement.addEventListener('click', function() {
+                                        const day = this.dataset.day;
+                                        const num = this.dataset.num;
+                                        const numIndex = this.dataset.index;
+                                        const key = `${day}_${num}_${numIndex}`;
+                                        
+                                        this.classList.toggle('selected');
+                                        
+                                        if (this.classList.contains('selected')) {
+                                            appState.selectedNumbers[key] = true;
+                                        } else {
+                                            delete appState.selectedNumbers[key];
+                                        }
+                                        
+                                        saveData();
+                                    });
+                                }
+                                
+                                const label = document.createElement('div');
+                                label.className = 'number-label';
+                                label.textContent = (numIndex + 1) % 3 === 0 ? '8/28' : '7/24';
+                                
+                                wrapper.appendChild(numberElement);
+                                wrapper.appendChild(label);
+                                groupContainer.appendChild(wrapper);
+                            }
+                            
+                            dayContainer.appendChild(groupContainer);
+                        }
+                        
+                        elements.container.appendChild(dayContainer);
+                    });
+                    
+                    if (appState.isHybrid) {
+                        elements.adminRow.classList.remove('hidden');
+                        createAdminRow();
+                        elements.hybridBtn.classList.add('hidden');
+                        elements.logoutBtn.classList.remove('hidden');
+                    } else {
+                        elements.adminRow.classList.add('hidden');
+                        elements.hybridBtn.classList.remove('hidden');
+                        elements.logoutBtn.classList.add('hidden');
+                    }
+                }
+                
+                function startSyncInterval() {
+                    appState.intervals.syncInterval = setInterval(async () => {
+                        if (!appState.isHybrid) {
+                            await loadInitialData();
+                        }
+                    }, 30000);
+                }
+                
+                function checkDateChange() {
+                    const newDateKey = getDateKey();
+                    if (newDateKey !== appState.currentDateKey) {
+                        const todayIndex = new Date().getDay();
+                        Object.keys(appState.selectedNumbers).forEach(key => {
+                            const [dayIndexStr] = key.split('_');
+                            const dayIndex = parseInt(dayIndexStr);
+                            
+                            if (dayIndex === todayIndex) {
+                                delete appState.selectedNumbers[key];
+                            }
+                        });
+                        
+                        localStorage.setItem('selectedNumbers', JSON.stringify(appState.selectedNumbers));
+                        appState.currentDateKey = newDateKey;
+                        todayDayOfWeek = todayIndex;
+                        createDaysInterface();
+                        saveData();
+                        
+                        updateSyncStatus('Дата изменилась, сброшены кнопки для текущего дня');
+                    }
+                }
+                
+                function setupEventListeners() {
+                    elements.hybridBtn.addEventListener('click', function() {
+                        elements.hybridLogin.classList.remove('hidden');
+                        const savedDeviceInfo = localStorage.getItem('adminDevice');
+                        if (savedDeviceInfo) {
+                            try {
+                                const deviceInfo = JSON.parse(savedDeviceInfo);
+                                elements.hybridEmailInput.value = deviceInfo.email;
+                                elements.hybridPasswordInput.focus();
+                            } catch (e) {
+                                console.log("Ошибка чтения сохраненных данных устройства", e);
+                            }
+                        }
+                    });
+                    
+                    elements.cancelBtn.addEventListener('click', function() {
+                        elements.hybridLogin.classList.add('hidden');
+                        elements.hybridEmailInput.value = '';
+                        elements.hybridPasswordInput.value = '';
+                        hideError();
+                    });
+                    
+                    elements.loginBtn.addEventListener('click', async function() {
+                        const email = elements.hybridEmailInput.value.trim();
+                        const password = elements.hybridPasswordInput.value.trim();
+                        
+                        if (!email || !password) {
+                            showErrorToUser('Пожалуйста, введите email и пароль');
+                            return;
+                        }
+                        
+                        hideError();
+                        const isValid = await checkPassword(email, password);
+                        
+                        if (isValid) {
+                            appState.isHybrid = true;
+                            elements.hybridLogin.classList.add('hidden');
+                            elements.hybridEmailInput.value = '';
+                            elements.hybridPasswordInput.value = '';
+                            
+                            saveData();
+                            createDaysInterface();
+                        }
+                    });
+
+                    elements.logoutBtn.addEventListener('click', async function() {
+                        try {
+                            await auth.signOut();
+                            
+                            // Удаляем информацию об устройстве
+                            const savedDeviceInfo = localStorage.getItem('adminDevice');
+                            if (savedDeviceInfo) {
+                                try {
+                                    const deviceInfo = JSON.parse(savedDeviceInfo);
+                                    if (deviceInfo.deviceId) {
+                                        await database.ref(`adminDevices/${deviceInfo.deviceId}`).remove()
+                                            .catch(e => console.log("Не удалось удалить устройство из Firebase", e));
+                                    }
+                                } catch (e) {
+                                    console.log("Ошибка парсинга deviceInfo", e);
+                                }
+                            }
+                            
+                            localStorage.removeItem('adminDevice');
+                            updateSyncStatus('Администратор вышел из системы');
+                            appState.isHybrid = false;
+                            createDaysInterface();
+                        } catch (error) {
+                            console.error('Ошибка выхода:', error);
+                            showErrorToUser('Ошибка при выходе: ' + error.message);
+                        }
+                    });
+
+                    // Инициализация
+                    try {
+                        initFirebaseAuth().then(() => {
+                            loadInitialData().then(() => {
+                                createDaysInterface();
+                                appState.intervals.pageRefreshInterval = setInterval(checkDateChange, 60000);
+                                startSyncInterval();
+                            }).catch(error => {
+                                console.error("Ошибка загрузки данных:", error);
+                                updateSyncStatus("Ошибка загрузки данных");
+                            });
+                        }).catch(error => {
+                            console.error("Ошибка инициализации Firebase:", error);
+                            updateSyncStatus("Ошибка подключения к Firebase");
+                        });
+                    } catch (e) {
+                        console.error("Глобальная ошибка инициализации:", e);
+                        updateSyncStatus("Критическая ошибка при запуске");
+                    }
                 }
             });
-
-            // Инициализация
-            try {
-                initFirebase().then(() => {
-                    loadInitialData().then(() => {
-                        createDaysInterface();
-                        setInterval(checkDateChange, 60000);
-                        startSyncInterval();
-                    }).catch(error => {
-                        console.error("Ошибка загрузки данных:", error);
-                        updateSyncStatus("Ошибка загрузки данных");
-                    });
-                }).catch(error => {
-                    console.error("Ошибка инициализации Firebase:", error);
-                    updateSyncStatus("Ошибка подключения к Firebase");
-                });
-            } catch (e) {
-                console.error("Глобальная ошибка инициализации:", e);
-                updateSyncStatus("Критическая ошибка при запуске");
-            }
-        });
+        }
     </script>
 </body>
 </html>

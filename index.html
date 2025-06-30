@@ -387,68 +387,69 @@
                 }
             }
 
-            async function checkAutoLogin() {
-                try {
-                    const savedDeviceInfo = localStorage.getItem('adminDevice');
-                    if (!savedDeviceInfo) return false;
-                    
-                    let deviceInfo;
-                    try {
-                        deviceInfo = JSON.parse(savedDeviceInfo);
-                        if (!deviceInfo.deviceId || !deviceInfo.email) {
-                            throw new Error("Неверный формат данных устройства");
-                        }
-                    } catch (e) {
-                        console.log("Ошибка парсинга данных устройства:", e);
-                        localStorage.removeItem('adminDevice');
-                        return false;
-                    }
-                    
-                    const currentDeviceId = getDeviceId();
-                    if (deviceInfo.deviceId !== currentDeviceId) {
-                        console.log("Device ID не совпадает");
-                        return false;
-                    }
-                    
-                    try {
-                        const snapshot = await database.ref('adminDevices/' + deviceInfo.deviceId).once('value');
-                        const firebaseDeviceInfo = snapshot.val();
-                        
-                        if (!firebaseDeviceInfo) {
-                            console.log("Информация об устройстве не найдена в Firebase");
-                            return false;
-                        }
-                        
-                        try {
-                            await auth.signInWithEmailAndPassword(deviceInfo.email, "dummy_password");
-                        } catch (error) {
-                            if (error.code === 'auth/wrong-password') {
-                                console.log("Автоматический вход требует ввода пароля");
-                                return false;
-                            }
-                            throw error;
-                        }
-                        
-                        const user = auth.currentUser;
-                        if (user && ADMIN_UIDS.includes(user.uid)) {
-                            isHybrid = true;
-                            hybridBtn.classList.add('hidden');
-                            logoutBtn.classList.remove('hidden');
-                            createDaysInterface();
-                            updateSyncStatus('Автоматический вход выполнен');
-                            return true;
-                        }
-                        
-                        return false;
-                    } catch (error) {
-                        console.log("Ошибка автоматического входа:", error);
-                        return false;
-                    }
-                } catch (error) {
-                    console.log("Ошибка в checkAutoLogin:", error);
-                    return false;
-                }
+          async function checkAutoLogin() {
+    try {
+        const savedDeviceInfo = localStorage.getItem('adminDevice');
+        if (!savedDeviceInfo) return false;
+        
+        let deviceInfo;
+        try {
+            deviceInfo = JSON.parse(savedDeviceInfo);
+            if (!deviceInfo.deviceId || !deviceInfo.email) {
+                throw new Error("Неверный формат данных устройства");
             }
+        } catch (e) {
+            console.log("Ошибка парсинга данных устройства:", e);
+            localStorage.removeItem('adminDevice');
+            return false;
+        }
+        
+        const currentDeviceId = getDeviceId();
+        if (deviceInfo.deviceId !== currentDeviceId) {
+            console.log("Device ID не совпадает");
+            return false;
+        }
+        
+        try {
+            const snapshot = await database.ref('adminDevices/' + deviceInfo.deviceId).once('value');
+            const firebaseDeviceInfo = snapshot.val();
+            
+            if (!firebaseDeviceInfo) {
+                console.log("Информация об устройстве не найдена в Firebase");
+                return false;
+            }
+            
+            // Удаляем эту часть кода (неправильная попытка входа)
+            // try {
+            //     await auth.signInWithEmailAndPassword(deviceInfo.email, "dummy_password");
+            // } catch (error) {
+            //     if (error.code === 'auth/wrong-password') {
+            //         console.log("Автоматический вход требует ввода пароля");
+            //         return false;
+            //     }
+            //     throw error;
+            // }
+            
+            // Вместо этого просто проверяем, что устройство зарегистрировано
+            if (firebaseDeviceInfo.uid && ADMIN_UIDS.includes(firebaseDeviceInfo.uid)) {
+                isHybrid = true;
+                hybridBtn.classList.add('hidden');
+                logoutBtn.classList.remove('hidden');
+                createDaysInterface();
+                updateSyncStatus('Автоматический вход выполнен');
+                return true;
+            }
+            
+            return false;
+        } catch (error) {
+            console.log("Ошибка автоматического входа:", error);
+            return false;
+        }
+    } catch (error) {
+        console.log("Ошибка в checkAutoLogin:", error);
+        return false;
+    }
+}
 
             function setupRealtimeUpdates() {
                 if (refreshInterval) clearInterval(refreshInterval);

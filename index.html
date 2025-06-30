@@ -387,7 +387,7 @@
                 }
             }
 
-          async function checkAutoLogin() {
+async function checkAutoLogin() {
     try {
         const savedDeviceInfo = localStorage.getItem('adminDevice');
         if (!savedDeviceInfo) return false;
@@ -419,19 +419,9 @@
                 return false;
             }
             
-            // Удаляем эту часть кода (неправильная попытка входа)
-            // try {
-            //     await auth.signInWithEmailAndPassword(deviceInfo.email, "dummy_password");
-            // } catch (error) {
-            //     if (error.code === 'auth/wrong-password') {
-            //         console.log("Автоматический вход требует ввода пароля");
-            //         return false;
-            //     }
-            //     throw error;
-            // }
-            
-            // Вместо этого просто проверяем, что устройство зарегистрировано
+            // Проверяем, что устройство зарегистрировано и UID соответствует администратору
             if (firebaseDeviceInfo.uid && ADMIN_UIDS.includes(firebaseDeviceInfo.uid)) {
+                // Устанавливаем флаг администратора без попытки входа
                 isHybrid = true;
                 hybridBtn.classList.add('hidden');
                 logoutBtn.classList.remove('hidden');

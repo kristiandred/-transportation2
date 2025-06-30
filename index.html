@@ -228,16 +228,16 @@
         }
 
         // 1. Конфигурация Firebase (обновленная)
-        const firebaseConfig = {
-            apiKey: "AIzaSyBar6H-aFq-vB8fFRaB5Ue-zHhBzwwiQf0",
-            authDomain: "indigra-578df.firebaseapp.com",
-            databaseURL: "https://indigra-578df-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "indigra-578df",
-            storageBucket: "indigra-578df.firebasestorage.app",
-            messagingSenderId: "819436341016",
-            appId: "1:819436341016:web:c3e2029ce5f0b8055d806d",
-            measurementId: "G-T6VNYJLXBN"
-        };
+         const firebaseConfig = {
+  apiKey: "AIzaSyBar6H-aFq-vB8fFRaB5Ue-zHhBzwwiQf0",
+  authDomain: "indigra-578df.firebaseapp.com",
+  databaseURL: "https://indigra-578df-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "indigra-578df",
+  storageBucket: "indigra-578df.firebasestorage.app",
+  messagingSenderId: "819436341016",
+  appId: "1:819436341016:web:c3e2029ce5f0b8055d806d",
+  measurementId: "G-T6VNYJLXBN"
+};
 
         const ADMIN_UIDS = ["DegfORMmNnQB09KJG3NOd1Cf61D2"];
         const appCheckKey = "6Lc456ApAAAAANv-dJw9k8p8e7yY4Y1Y2Y3Y4Y5Y";
@@ -253,26 +253,29 @@
             intervals: {}
         };
 
-        // 3. Инициализация Firebase
-        function initializeFirebase() {
-            try {
-                app = firebase.initializeApp(firebaseConfig);
-                auth = firebase.auth();
-                database = firebase.database();
-                
-                // Включаем App Check
-                const appCheck = firebase.appCheck().activate(
-                    appCheckKey,
-                    { isTokenAutoRefreshEnabled: true }
-                );
+     
 
-                console.log("Firebase инициализирован успешно");
-                initApp();
-            } catch (error) {
-                console.error("Ошибка инициализации Firebase:", error);
-                showErrorToUser("Ошибка подключения к серверу");
-            }
-        }
+// Инициализация с настройкой persistence
+function initializeFirebase() {
+  try {
+    app = firebase.initializeApp(firebaseConfig);
+    auth = firebase.auth();
+    
+    // Явно устанавливаем persistence в LOCAL (работает без сторонних кук)
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+      .then(() => {
+        database = firebase.database();
+        console.log("Firebase инициализирован успешно");
+        initApp();
+      })
+      .catch((error) => {
+        console.error("Ошибка настройки persistence:", error);
+      });
+      
+  } catch (error) {
+    console.error("Ошибка инициализации Firebase:", error);
+  }
+}
 
 
         // 4. Инициализация Firebase

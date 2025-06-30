@@ -220,14 +220,15 @@
     <div id="sync-status" class="sync-status"></div>
     <button id="logout-btn" class="hybrid-btn hidden" style="right: 120px;">🚪 Выйти</button>
 
-    <script>
-        // Функция для получения ключа даты (перенесена в начало)
+   <script>
+        // Функция для получения ключа даты
         function getDateKey() {
             const date = new Date();
             return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
         }
 
-        // 1. Конфигурация будет загружаться динамически
+        // 1. Объявляем все переменные один раз в начале
+        let firebaseConfig = {};
         let ADMIN_UIDS = [];
         let app, auth, database;
 
@@ -240,9 +241,14 @@
             intervals: {}
         };
 
-        // 3. Загрузка конфигурации
-        fetch('/firebase-config.json')
-            .then(response => response.json())
+        // 3. Улучшенная загрузка конфигурации
+        fetch('firebase-config.json')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(config => {
                 firebaseConfig = config;
                 ADMIN_UIDS = config.adminUids || [];
@@ -250,7 +256,7 @@
             })
             .catch(error => {
                 console.error("Ошибка загрузки конфигурации:", error);
-                // Резервная конфигурация (удалить после тестирования)
+                // Резервная конфигурация
                 firebaseConfig = {
                     apiKey: "AIzaSyBar6H-aFq-vB8fFRaB5Ue-zHhBzwwiQf0",
                     authDomain: "indigra-578df.firebaseapp.com",
@@ -273,7 +279,6 @@
                 auth = firebase.auth();
                 database = firebase.database();
                 
-                // Включаем App Check если настроен
                 if (firebaseConfig.appCheckKey) {
                     const appCheck = firebase.appCheck().activate(
                         firebaseConfig.appCheckKey,
@@ -288,7 +293,6 @@
                 showErrorToUser("Ошибка подключения к серверу");
             }
         }
-
         // 5. Основная инициализация приложения
         function initApp() {
             document.addEventListener('DOMContentLoaded', function() {

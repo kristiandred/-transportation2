@@ -144,6 +144,28 @@
         .admin-row.hidden {
             display: none;
         }
+        .price-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        .price-table th, .price-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .price-table th {
+            background-color: #f2f2f2;
+        }
+        .price-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .price-table caption {
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+        }
         @media (max-width: 600px) {
             body {
                 padding: 10px;
@@ -162,8 +184,10 @@
             .color-legend {
                 justify-content: center;
             }
+            .price-table {
+                font-size: 12px;
+            }
         }
-         
     </style>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
@@ -196,6 +220,58 @@
     
     <div id="days-container">
         <!-- Дни недели будут добавлены здесь JavaScript -->
+    </div>
+
+    <div class="price-table-container">
+        <table class="price-table">
+            <caption>Тарифы на услуги</caption>
+            <thead>
+                <tr>
+                    <th>Услуга</th>
+                    <th>Стартовая цена</th>
+                    <th>До 50 км</th>
+                    <th>50-100 км</th>
+                    <th>Свыше 100 км</th>
+                    <th>Дополнительно</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Стрела 24м до 7.5м³</td>
+                    <td>600 руб.</td>
+                    <td>5 руб./км</td>
+                    <td>6 руб./км</td>
+                    <td>7 руб./км</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Стрела 28м</td>
+                    <td>650 руб.</td>
+                    <td>5 руб./км</td>
+                    <td>6 руб./км</td>
+                    <td>7 руб./км</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Свыше 7.5м³ до 8.5м³</td>
+                    <td>650 руб.</td>
+                    <td colspan="3"></td>
+                    <td>15 м³ входит в заказ<br>Свыше 15м³ +25 руб./м³</td>
+                </tr>
+                <tr>
+                    <td colspan="5">Дополнительный шланг 4м</td>
+                    <td>50 руб./шт. (2 шланга в комплекте)</td>
+                </tr>
+                <tr>
+                    <td colspan="5">Отсутствие мойки смесительного барабана</td>
+                    <td>200 руб.</td>
+                </tr>
+                <tr>
+                    <td colspan="5">Отсутствие мойки приёмника автобетононасоса</td>
+                    <td>ЗАКАЗ НЕ ПРИНИМАЕТСЯ</td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 
     <div id="hybrid-login" class="hybrid-login hidden">
@@ -387,59 +463,59 @@
                 }
             }
 
-         async function checkAutoLogin() {
-    try {
-        const savedDeviceInfo = localStorage.getItem('adminDevice');
-        if (!savedDeviceInfo) return false;
-        
-        let deviceInfo;
-        try {
-            deviceInfo = JSON.parse(savedDeviceInfo);
-            if (!deviceInfo.deviceId || !deviceInfo.email) {
-                throw new Error("Неверный формат данных устройства");
+            async function checkAutoLogin() {
+                try {
+                    const savedDeviceInfo = localStorage.getItem('adminDevice');
+                    if (!savedDeviceInfo) return false;
+                    
+                    let deviceInfo;
+                    try {
+                        deviceInfo = JSON.parse(savedDeviceInfo);
+                        if (!deviceInfo.deviceId || !deviceInfo.email) {
+                            throw new Error("Неверный формат данных устройства");
+                        }
+                    } catch (e) {
+                        console.log("Ошибка парсинга данных устройства:", e);
+                        localStorage.removeItem('adminDevice');
+                        return false;
+                    }
+                    
+                    const currentDeviceId = getDeviceId();
+                    if (deviceInfo.deviceId !== currentDeviceId) {
+                        console.log("Device ID не совпадает");
+                        return false;
+                    }
+                    
+                    try {
+                        const snapshot = await database.ref('adminDevices/' + deviceInfo.deviceId).once('value');
+                        const firebaseDeviceInfo = snapshot.val();
+                        
+                        if (!firebaseDeviceInfo) {
+                            console.log("Информация об устройстве не найдена в Firebase");
+                            return false;
+                        }
+                        
+                        // Проверяем, что устройство зарегистрировано и UID соответствует администратору
+                        if (firebaseDeviceInfo.uid && ADMIN_UIDS.includes(firebaseDeviceInfo.uid)) {
+                            // Устанавливаем флаг администратора без попытки входа
+                            isHybrid = true;
+                            hybridBtn.classList.add('hidden');
+                            logoutBtn.classList.remove('hidden');
+                            createDaysInterface();
+                            updateSyncStatus('Автоматический вход выполнен');
+                            return true;
+                        }
+                        
+                        return false;
+                    } catch (error) {
+                        console.log("Ошибка автоматического входа:", error);
+                        return false;
+                    }
+                } catch (error) {
+                    console.log("Ошибка в checkAutoLogin:", error);
+                    return false;
+                }
             }
-        } catch (e) {
-            console.log("Ошибка парсинга данных устройства:", e);
-            localStorage.removeItem('adminDevice');
-            return false;
-        }
-        
-        const currentDeviceId = getDeviceId();
-        if (deviceInfo.deviceId !== currentDeviceId) {
-            console.log("Device ID не совпадает");
-            return false;
-        }
-        
-        try {
-            const snapshot = await database.ref('adminDevices/' + deviceInfo.deviceId).once('value');
-            const firebaseDeviceInfo = snapshot.val();
-            
-            if (!firebaseDeviceInfo) {
-                console.log("Информация об устройстве не найдена в Firebase");
-                return false;
-            }
-            
-            // Проверяем, что устройство зарегистрировано и UID соответствует администратору
-            if (firebaseDeviceInfo.uid && ADMIN_UIDS.includes(firebaseDeviceInfo.uid)) {
-                // Устанавливаем флаг администратора без попытки входа
-                isHybrid = true;
-                hybridBtn.classList.add('hidden');
-                logoutBtn.classList.remove('hidden');
-                createDaysInterface();
-                updateSyncStatus('Автоматический вход выполнен');
-                return true;
-            }
-            
-            return false;
-        } catch (error) {
-            console.log("Ошибка автоматического входа:", error);
-            return false;
-        }
-    } catch (error) {
-        console.log("Ошибка в checkAutoLogin:", error);
-        return false;
-    }
-}
 
             function setupRealtimeUpdates() {
                 if (refreshInterval) clearInterval(refreshInterval);
@@ -526,59 +602,74 @@
                 title.textContent = 'Администратор (выделить все дни):';
                 adminRow.appendChild(title);
                 
-                adminNumbers.forEach((num, numIndex) => {
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'number-wrapper';
+                // Создаем контейнер для групп чисел администратора
+                const adminGroupsContainer = document.createElement('div');
+                
+                for (let group = 0; group < 3; group++) {
+                    const groupContainer = document.createElement('div');
+                    groupContainer.className = 'number-group';
                     
-                    const numberElement = document.createElement('div');
-                    numberElement.className = 'number';
-                    numberElement.textContent = num;
-                    numberElement.dataset.num = num;
-                    numberElement.dataset.index = numIndex;
-                    
-                    if ((numIndex + 1) % 3 === 0) {
-                        numberElement.classList.add('special');
+                    for (let j = 0; j < 3; j++) {
+                        const numIndex = group * 3 + j;
+                        const num = adminNumbers[numIndex];
+                        
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'number-wrapper';
+                        
+                        const numberElement = document.createElement('div');
+                        numberElement.className = 'number';
+                        numberElement.textContent = num;
+                        numberElement.dataset.num = num;
+                        numberElement.dataset.index = numIndex;
+                        
+                        if ((numIndex + 1) % 3 === 0) {
+                            numberElement.classList.add('special');
+                        }
+                        
+                        numberElement.addEventListener('click', function() {
+                            const num = this.dataset.num;
+                            const numIndex = this.dataset.index;
+                            
+                            const allNumberElements = document.querySelectorAll('.number');
+                            let anySelected = false;
+                            
+                            allNumberElements.forEach(el => {
+                                if (el.dataset.num === num && el.dataset.index === numIndex && el.classList.contains('selected')) {
+                                    anySelected = true;
+                                }
+                            });
+                            
+                            allNumberElements.forEach(el => {
+                                if (el.dataset.num === num && el.dataset.index === numIndex) {
+                                    const day = el.dataset.day;
+                                    const key = `${day}_${num}_${numIndex}`;
+                                    
+                                    if (anySelected) {
+                                        el.classList.remove('selected');
+                                        delete selectedNumbers[key];
+                                    } else {
+                                        el.classList.add('selected');
+                                        selectedNumbers[key] = true;
+                                    }
+                                }
+                            });
+                            
+                            saveData();
+                        });
+                        
+                        const label = document.createElement('div');
+                        label.className = 'number-label';
+                        label.textContent = (numIndex + 1) % 3 === 0 ? '8/28' : '7/24';
+                        
+                        wrapper.appendChild(numberElement);
+                        wrapper.appendChild(label);
+                        groupContainer.appendChild(wrapper);
                     }
                     
-                    numberElement.addEventListener('click', function() {
-                        const num = this.dataset.num;
-                        const numIndex = this.dataset.index;
-                        
-                        const allNumberElements = document.querySelectorAll('.number');
-                        let anySelected = false;
-                        
-                        allNumberElements.forEach(el => {
-                            if (el.dataset.num === num && el.dataset.index === numIndex && el.classList.contains('selected')) {
-                                anySelected = true;
-                            }
-                        });
-                        
-                        allNumberElements.forEach(el => {
-                            if (el.dataset.num === num && el.dataset.index === numIndex) {
-                                const day = el.dataset.day;
-                                const key = `${day}_${num}_${numIndex}`;
-                                
-                                if (anySelected) {
-                                    el.classList.remove('selected');
-                                    delete selectedNumbers[key];
-                                } else {
-                                    el.classList.add('selected');
-                                    selectedNumbers[key] = true;
-                                }
-                            }
-                        });
-                        
-                        saveData();
-                    });
-                    
-                    const label = document.createElement('div');
-                    label.className = 'number-label';
-                    label.textContent = (numIndex + 1) % 3 === 0 ? '8/28' : '7/24';
-                    
-                    wrapper.appendChild(numberElement);
-                    wrapper.appendChild(label);
-                    adminRow.appendChild(wrapper);
-                });
+                    adminGroupsContainer.appendChild(groupContainer);
+                }
+                
+                adminRow.appendChild(adminGroupsContainer);
             }
             
             function createDaysInterface() {
@@ -692,6 +783,9 @@
                 const newDateKey = getDateKey();
                 if (newDateKey !== currentDateKey) {
                     const todayIndex = new Date().getDay();
+                    const previousSelectedNumbers = {...selectedNumbers};
+                    
+                    // Сбрасываем все выделения для текущего дня
                     Object.keys(selectedNumbers).forEach(key => {
                         const [dayIndexStr] = key.split('_');
                         const dayIndex = parseInt(dayIndexStr);
@@ -705,7 +799,11 @@
                     currentDateKey = newDateKey;
                     todayDayOfWeek = todayIndex;
                     createDaysInterface();
-                    saveData();
+                    
+                    // Если есть изменения, сохраняем
+                    if (JSON.stringify(previousSelectedNumbers) !== JSON.stringify(selectedNumbers)) {
+                        saveData();
+                    }
                     
                     updateSyncStatus('Дата изменилась, сброшены кнопки для текущего дня');
                 }

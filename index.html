@@ -77,7 +77,6 @@
             height: 50px;
             line-height: 50px;
             text-align: center;
-            background-color: #3498db;
             color: white;
             border-radius: 50%;
             cursor: pointer;
@@ -95,9 +94,6 @@
             font-weight: 600;
             color: #555;
         }
-        .number.special {
-            background-color: #9b59b6;
-        }
         .number.selected {
             background-color: #e74c3c !important;
             transform: scale(1.1);
@@ -106,6 +102,16 @@
         .number.readonly {
             cursor: default;
             opacity: 0.8;
+        }
+        /* Цвета для кнопок */
+        .number[data-num="1"] {
+            background-color: #3498db;
+        }
+        .number[data-num="2"] {
+            background-color: #2ecc71;
+        }
+        .number[data-num="3"] {
+            background-color: #9b59b6;
         }
         .hybrid-btn {
             position: absolute;
@@ -125,9 +131,6 @@
             font-size: 20px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             transition: all 0.3s;
-        }
-        .hybrid-btn:hover {
-            transform: scale(1.1);
         }
         .hybrid-login {
             position: fixed;
@@ -246,23 +249,30 @@
         }
         .price-table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
             margin: 25px 0;
             font-size: 15px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             background-color: white;
             border-radius: 10px;
             overflow: hidden;
         }
-        .price-table th, .price-table td {
-            border: 1px solid #e1e5eb;
-            padding: 12px 15px;
-            text-align: left;
-        }
         .price-table th {
-            background-color: #2c3e50;
+            background: linear-gradient(135deg, #2c3e50, #4a6491);
             color: white;
             font-weight: 600;
+            padding: 15px;
+            text-align: left;
+            border: none;
+        }
+        .price-table td {
+            padding: 12px 15px;
+            border: none;
+            border-bottom: 1px solid #e1e5eb;
+        }
+        .price-table tr:last-child td {
+            border-bottom: none;
         }
         .price-table tr:nth-child(even) {
             background-color: #f8f9fa;
@@ -276,6 +286,7 @@
             text-align: center;
             font-size: 18px;
             color: #2c3e50;
+            padding: 10px;
         }
         .section {
             scroll-margin-top: 80px;
@@ -367,18 +378,22 @@
         <a href="#services-section">Услуги</a>
     </div>
     
-    <button id="hybrid-btn" class="hybrid-btn" title="Гибрид">Гибрид</button>
-    <button id="logout-btn" class="logout-btn hidden" title="Выйти">Выйти</button>
+    <button id="hybrid-btn" class="hybrid-btn hidden" title="Гибрид"></button>
+    <button id="logout-btn" class="logout-btn hidden" title="Выйти"></button>
     
     <div id="machines-section" class="section">
         <div class="color-legend">
             <div class="color-item">
                 <div class="color-box" style="background-color: #3498db;"></div>
-                <span>Свободная машина (7/24)</span>
+                <span>Машина 1 (7/24)</span>
+            </div>
+            <div class="color-item">
+                <div class="color-box" style="background-color: #2ecc71;"></div>
+                <span>Машина 2 (7/24)</span>
             </div>
             <div class="color-item">
                 <div class="color-box" style="background-color: #9b59b6;"></div>
-                <span>Свободная машина (8/28)</span>
+                <span>Машина 3 (8/28)</span>
             </div>
             <div class="color-item">
                 <div class="color-box" style="background-color: #e74c3c;"></div>
@@ -401,12 +416,11 @@
                 <caption>Тарифы на услуги</caption>
                 <thead>
                     <tr>
-                        <th>Услуга</th>
+                        <th style="border-top-left-radius: 10px;">Услуга</th>
                         <th>Стартовая цена</th>
                         <th>До 50 км</th>
                         <th>50-100 км</th>
-                        <th>Свыше 100 км</th>
-                        <th>Дополнительно</th>
+                        <th style="border-top-right-radius: 10px;">Свыше 100 км</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -416,7 +430,6 @@
                         <td>5 руб./км</td>
                         <td>6 руб./км</td>
                         <td>7 руб./км</td>
-                        <td></td>
                     </tr>
                     <tr>
                         <td>Стрела 28м</td>
@@ -424,25 +437,27 @@
                         <td>5 руб./км</td>
                         <td>6 руб./км</td>
                         <td>7 руб./км</td>
-                        <td></td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" style="font-weight: bold; background-color: #f8f9fa;">Дополнительные услуги</td>
                     </tr>
                     <tr>
                         <td>Свыше 7.5м³ до 8.5м³</td>
-                        <td>650 руб.</td>
-                        <td colspan="3"></td>
-                        <td>15 м³ входит в заказ<br>Свыше 15м³ +25 руб./м³</td>
+                        <td colspan="3">650 руб.</td>
+                        <td>+25 руб./м³ свыше 15м³</td>
                     </tr>
                     <tr>
-                        <td colspan="5">Дополнительный шланг 4м</td>
-                        <td>50 руб./шт. (2 шланга в комплекте)</td>
+                        <td>Дополнительный шланг 4м</td>
+                        <td colspan="3">50 руб./шт.</td>
+                        <td>(2 шланга в комплекте)</td>
                     </tr>
                     <tr>
-                        <td colspan="5">Отсутствие мойки смесительного барабана</td>
-                        <td>200 руб.</td>
+                        <td>Отсутствие мойки смесительного барабана</td>
+                        <td colspan="4">200 руб.</td>
                     </tr>
                     <tr>
-                        <td colspan="5">Отсутствие мойки приёмника автобетононасоса</td>
-                        <td>ЗАКАЗ НЕ ПРИНИМАЕТСЯ</td>
+                        <td style="color: #e74c3c; font-weight: bold;">Отсутствие мойки приёмника автобетононасоса</td>
+                        <td colspan="4" style="color: #e74c3c; font-weight: bold;">ЗАКАЗ НЕ ПРИНИМАЕТСЯ</td>
                     </tr>
                 </tbody>
             </table>
@@ -798,8 +813,13 @@
                         numberElement.dataset.num = num;
                         numberElement.dataset.index = numIndex;
                         
-                        if ((numIndex + 1) % 3 === 0) {
-                            numberElement.classList.add('special');
+                        // Установка цвета в зависимости от номера
+                        if (num === '1') {
+                            numberElement.style.backgroundColor = '#3498db';
+                        } else if (num === '2') {
+                            numberElement.style.backgroundColor = '#2ecc71';
+                        } else if (num === '3') {
+                            numberElement.style.backgroundColor = '#9b59b6';
                         }
                         
                         numberElement.addEventListener('click', function() {
@@ -890,8 +910,13 @@
                             numberElement.dataset.num = num;
                             numberElement.dataset.index = numIndex;
                             
-                            if ((numIndex + 1) % 3 === 0) {
-                                numberElement.classList.add('special');
+                            // Установка цвета в зависимости от номера
+                            if (num === '1') {
+                                numberElement.style.backgroundColor = '#3498db';
+                            } else if (num === '2') {
+                                numberElement.style.backgroundColor = '#2ecc71';
+                            } else if (num === '3') {
+                                numberElement.style.backgroundColor = '#9b59b6';
                             }
                             
                             const key = `${originalDayIndex}_${num}_${numIndex}`;
@@ -942,7 +967,7 @@
                     logoutBtn.classList.remove('hidden');
                 } else {
                     adminRow.classList.add('hidden');
-                    hybridBtn.classList.remove('hidden');
+                    hybridBtn.classList.add('hidden');
                     logoutBtn.classList.add('hidden');
                 }
             }

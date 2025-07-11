@@ -6,61 +6,38 @@
     <title>Гибрид Индигра</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 850px;
+            font-family: Arial, sans-serif;
+            max-width: 750px;
             margin: 0 auto;
             padding: 20px;
             position: relative;
-            background-color: #f5f7fa;
-            color: #333;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #e1e5eb;
-        }
-        .logo {
-            height: 80px;
-            margin-bottom: 15px;
         }
         .navbar {
             display: flex;
             justify-content: center;
-            background: linear-gradient(135deg, #2c3e50, #4a6491);
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 25px;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
             flex-wrap: wrap;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
         .navbar a {
-            color: white;
+            color: #333;
             text-decoration: none;
-            padding: 10px 20px;
+            padding: 8px 15px;
             margin: 0 5px;
-            border-radius: 6px;
-            transition: all 0.3s;
-            font-weight: 500;
+            border-radius: 4px;
+            transition: background-color 0.3s;
         }
         .navbar a:hover {
-            background-color: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
+            background-color: #e9ecef;
         }
         .day-container {
-            margin-bottom: 25px;
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 15px;
         }
         .day-title {
             font-weight: bold;
-            margin-bottom: 15px;
-            font-size: 18px;
-            color: #2c3e50;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #eee;
+            margin-bottom: 5px;
         }
         .number-wrapper {
             display: inline-block;
@@ -69,68 +46,56 @@
         }
         .number-group {
             display: inline-block;
-            margin-right: 25px;
+            margin-right: 20px;
         }
         .number {
             display: inline-block;
-            width: 50px;
-            height: 50px;
-            line-height: 50px;
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
             text-align: center;
+            background-color: #4CAF50;
             color: white;
             border-radius: 50%;
             cursor: pointer;
-            font-size: 20px;
-            font-weight: bold;
-            transition: all 0.3s;
-            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
-        }
-        .number:hover {
-            transform: scale(1.1);
+            font-size: 18px;
         }
         .number-label {
             font-size: 14px;
-            margin-top: 8px;
-            font-weight: 600;
-            color: #555;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+        .number.special {
+            background-color: #008522;
         }
         .number.selected {
-            background-color: #e74c3c !important;
-            transform: scale(1.1);
-            box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
+            background-color: #f44336 !important;
         }
         .number.readonly {
             cursor: default;
-            opacity: 0.8;
-        }
-        /* Цвета для кнопок */
-        .number[data-num="1"] {
-            background-color: #2ecc71;
-        }
-        .number[data-num="2"] {
-            background-color: #2ecc71;
-        }
-        .number[data-num="3"] {
-            background-color: #0D6501;
+            opacity: 0.7;
         }
         .hybrid-btn {
             position: absolute;
             top: 20px;
             right: 20px;
             padding: 5px 10px;
-            background: linear-gradient(135deg, #3498db, #2980b9);
+            background-color: #FF9800;
             color: white;
             border: none;
-            border-radius: 50%;
+            border-radius: 4px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             font-size: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/><path d="M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: center;
+            text-indent: -9999px;
+            overflow: hidden;
         }
         .hybrid-login {
             position: fixed;
@@ -138,7 +103,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.7);
+            background-color: rgba(0,0,0,0.5);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -146,53 +111,28 @@
         }
         .hybrid-login-content {
             background-color: white;
-            padding: 30px;
-            border-radius: 10px;
-            width: 350px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-        }
-        .hybrid-login h3 {
-            margin-top: 0;
-            color: #2c3e50;
-            text-align: center;
-            margin-bottom: 25px;
+            padding: 20px;
+            border-radius: 5px;
+            width: 300px;
         }
         .hybrid-login input {
             width: 100%;
-            padding: 12px;
+            padding: 8px;
             margin: 10px 0;
             box-sizing: border-box;
             border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 16px;
-            transition: all 0.3s;
-        }
-        .hybrid-login input:focus {
-            border-color: #3498db;
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
-            outline: none;
         }
         .hybrid-login input[type="password"] {
             -webkit-text-security: disc;
         }
         .hybrid-login button {
-            background: linear-gradient(135deg, #3498db, #2980b9);
+            background-color: #4CAF50;
             color: white;
-            padding: 12px 20px;
+            padding: 8px 12px;
             border: none;
-            border-radius: 6px;
+            border-radius: 4px;
             cursor: pointer;
             margin-right: 10px;
-            font-size: 16px;
-            font-weight: 500;
-            transition: all 0.3s;
-        }
-        .hybrid-login button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-        #cancel-btn {
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
         }
         .hidden {
             display: none;
@@ -200,13 +140,8 @@
         .color-legend {
             display: flex;
             flex-wrap: wrap;
-            margin-bottom: 30px;
-            gap: 15px;
-            justify-content: center;
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            gap: 10px;
         }
         .color-item {
             display: flex;
@@ -214,220 +149,116 @@
             margin-right: 15px;
         }
         .color-box {
-            width: 25px;
-            height: 25px;
-            margin-right: 8px;
-            border-radius: 4px;
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+            border: 1px solid #ddd;
         }
         .sync-status {
             position: fixed;
-            bottom: 15px;
-            right: 15px;
-            font-size: 13px;
-            color: #7f8c8d;
-            background-color: white;
-            padding: 8px 12px;
-            border-radius: 20px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            bottom: 10px;
+            right: 10px;
+            font-size: 12px;
+            color: #666;
         }
         .today-highlight {
-            background-color: #f8f4e5;
-            padding: 8px 15px;
-            border-radius: 6px;
-            display: inline-block;
-            border-left: 4px solid #f39c12;
+            background-color: #FFF9C4;
+            padding: 5px;
+            border-radius: 4px;
         }
         .admin-row {
-            background-color: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 25px;
-            border: 1px dashed #bdc3c7;
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
         }
         .admin-row.hidden {
             display: none;
         }
         .price-table {
             width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            margin: 25px 0;
-            font-size: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            background-color: white;
-            border-radius: 10px;
-            overflow: hidden;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        .price-table th, .price-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
         }
         .price-table th {
-            background: linear-gradient(135deg, #2c3e50, #4a6491);
-            color: white;
-            font-weight: 600;
-            padding: 15px;
-            text-align: left;
-            border: none;
-        }
-        .price-table td {
-            padding: 12px 15px;
-            border: none;
-            border-bottom: 1px solid #e1e5eb;
-        }
-        .price-table tr:last-child td {
-            border-bottom: none;
+            background-color: #f2f2f2;
         }
         .price-table tr:nth-child(even) {
-            background-color: #f8f9fa;
-        }
-        .price-table tr:hover {
-            background-color: #f1f5f9;
+            background-color: #f9f9f9;
         }
         .price-table caption {
             font-weight: bold;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             text-align: center;
-            font-size: 18px;
-            color: #2c3e50;
-            padding: 10px;
         }
         .section {
             scroll-margin-top: 80px;
         }
-        .logout-btn {
-            position: absolute;
-            top: 20px;
-            right: 85px;
-            padding: 5px 10px;
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: auto;
-            height: 50px;
-            font-size: 16px;
-            font-weight: 500;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s;
-            padding: 0 20px;
-        }
-        .logout-btn:hover {
-            transform: translateY(-2px);
-        }
-        @media (max-width: 768px) {
+        @media (max-width: 600px) {
             body {
-                padding: 15px;
+                padding: 10px;
             }
             .day-container {
                 text-align: center;
-                padding: 15px;
             }
             .number-group {
                 display: block;
                 margin-right: 0;
-                margin-bottom: 20px;
+                margin-bottom: 15px;
             }
             .number-wrapper {
                 margin: 10px 15px;
             }
             .color-legend {
-                flex-direction: column;
-                align-items: flex-start;
-                padding: 15px;
+                justify-content: center;
             }
             .price-table {
-                font-size: 14px;
+                font-size: 12px;
             }
             .navbar {
                 flex-direction: column;
                 align-items: center;
-                padding: 10px;
             }
             .navbar a {
-                margin: 8px 0;
+                margin: 5px 0;
                 width: 100%;
                 text-align: center;
             }
-            .hybrid-btn, .logout-btn {
-                position: static;
-                margin: 15px auto;
-                display: block;
-                width: 80%;
-                border-radius: 6px;
-            }
-            .header {
-                margin-bottom: 15px;
-            }
         }
-        .admin-login-btn {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    padding: 10px 20px;
-    background: linear-gradient(135deg, #3498db, #2980b9);
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 18px;
-    font-weight: bold;
-    font-family: 'Arial', sans-serif;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    transition: all 0.3s;
-    text-decoration: none;
-    display: inline-block;
-}
-
-.admin-login-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-    background: linear-gradient(135deg, #2980b9, #3498db);
-}
-
-.admin-login-btn::after {
-    content: "ADMIN";
-    display: block;
-    font-size: 10px;
-    letter-spacing: normal;
-    text-transform: none;
-    margin-top: -5px;
-    opacity: 0.8;
-}
     </style>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
 <body>
-    <!-- Логотип и заголовок -->
-    <div class="header">
-        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSIjMzQ5OGRiIiBkPSJNMjU2IDhDMTE5IDggOCAxMTkgOCAyNTZzMTExIDI0OCAyNDggMjQ4IDI0OC0xMTEgMjQ4LTI0OFMzOTMgOCAyNTYgOHptMCA0NDhjLTExMC41IDAtMjAwLTg5LjUtMjAwLTIwMFMxNDUuNSA1NiAyNTYgNTZzMjAwIDg5LjUgMjAwIDIwMC04OS41IDIwMC0yMDAgMjAwem02MS44LTEwNC40bC04NC45LTYxLjdjLTMuMS0yLjMtNC45LTUuOS00LjktOS43VDExNCAyNzZjMCA2LjYgNS40IDEyIDEyIDEyaDMyYzYuNiAwIDEyLTUuNCAxMi0xMnYtMzYuNmw2Ni44IDQ4LjZjNS40IDMuOSA2LjUgMTEuNCAyLjYgMTYuOEgzMzJjNi42IDAgMTItNS40IDEyLTEydi0zMmMwLTYuNi01LjQtMTItMTItMTJIMjM1LjNjLTYuNiAwLTEyIDUuNC0xMiAxMnYzMmMwIDYuNiA1LjQgMTIgMTIgMTJoNjMuOGMzLjQgNS40IDIuOCAxMi45LTIuNiAxNi44eiIvPjwvc3ZnPg==" class="logo" alt="Индигра Лого">
-        <h1>Свободные гибриды Индигра</h1>
-    </div>
-    
     <!-- Навигационная панель -->
     <div class="navbar">
         <a href="#machines-section">Свободные машины</a>
         <a href="#services-section">Услуги</a>
     </div>
     
-    <div id="admin-login-btn" class="admin-login-btn hidden">Индигра</div>
+    <h1>Свободные гибриды Индигра</h1>
+    
+    <button id="hybrid-btn" class="hybrid-btn" title="Гибрид">Гибрид</button>
     
     <div id="machines-section" class="section">
         <div class="color-legend">
             <div class="color-item">
-                <div class="color-box" style="background-color: #2ecc71;"></div>
+                <div class="color-box" style="background-color: #4CAF50;"></div>
                 <span>Свободная машина (7/24)</span>
             </div>
             <div class="color-item">
-                <div class="color-box" style="background-color: #0D6501;"></div>
+                <div class="color-box" style="background-color: #008522;"></div>
                 <span>Свободная машина (8/28)</span>
             </div>
             <div class="color-item">
-                <div class="color-box" style="background-color: #e74c3c;"></div>
+                <div class="color-box" style="background-color: #f44336;"></div>
                 <span>Занятая машина</span>
             </div>
         </div>
@@ -447,11 +278,12 @@
                 <caption>Тарифы на услуги</caption>
                 <thead>
                     <tr>
-                        <th style="border-top-left-radius: 10px;">Услуга</th>
+                        <th>Услуга</th>
                         <th>Стартовая цена</th>
                         <th>До 50 км</th>
                         <th>50-100 км</th>
-                        <th style="border-top-right-radius: 10px;">Свыше 100 км</th>
+                        <th>Свыше 100 км</th>
+                        <th>Дополнительно</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -461,6 +293,7 @@
                         <td>5 руб./км</td>
                         <td>6 руб./км</td>
                         <td>7 руб./км</td>
+                        <td></td>
                     </tr>
                     <tr>
                         <td>Стрела 28м</td>
@@ -468,27 +301,25 @@
                         <td>5 руб./км</td>
                         <td>6 руб./км</td>
                         <td>7 руб./км</td>
-                    </tr>
-                    <tr>
-                        <td colspan="4" style="font-weight: bold; background-color: #f8f9fa;">Дополнительные услуги</td>
+                        <td></td>
                     </tr>
                     <tr>
                         <td>Свыше 7.5м³ до 8.5м³</td>
-                        <td colspan="3">650 руб.</td>
-                        <td>+25 руб./м³ свыше 15м³</td>
+                        <td>650 руб.</td>
+                        <td colspan="3"></td>
+                        <td>15 м³ входит в заказ<br>Свыше 15м³ +25 руб./м³</td>
                     </tr>
                     <tr>
-                        <td>Дополнительный шланг 4м</td>
-                        <td colspan="3">50 руб./шт.</td>
-                        <td>(2 шланга в комплекте)</td>
+                        <td colspan="5">Дополнительный шланг 4м</td>
+                        <td>50 руб./шт. (2 шланга в комплекте)</td>
                     </tr>
                     <tr>
-                        <td>Отсутствие мойки смесительного барабана</td>
-                        <td colspan="4">200 руб.</td>
+                        <td colspan="5">Отсутствие мойки смесительного барабана</td>
+                        <td>200 руб.</td>
                     </tr>
                     <tr>
-                        <td style="color: #e74c3c; font-weight: bold;">Отсутствие мойки приёмника автобетононасоса</td>
-                        <td colspan="4" style="color: #e74c3c; font-weight: bold;">ЗАКАЗ НЕ ПРИНИМАЕТСЯ</td>
+                        <td colspan="5">Отсутствие мойки приёмника автобетононасоса</td>
+                        <td>ЗАКАЗ НЕ ПРИНИМАЕТСЯ</td>
                     </tr>
                 </tbody>
             </table>
@@ -500,18 +331,17 @@
             <h3>Вход для администратора</h3>
             <input type="email" id="hybrid-email" placeholder="Введите email">
             <input type="password" id="hybrid-password" placeholder="Введите пароль">
-            <div style="margin-top: 15px;">
+            <div style="margin-top: 10px;">
                 <input type="checkbox" id="remember-device" checked>
                 <label for="remember-device">Запомнить это устройство</label>
             </div>
-            <div style="margin-top: 20px; text-align: center;">
-                <button id="login-btn">Войти</button>
-                <button id="cancel-btn">Отмена</button>
-            </div>
+            <button id="login-btn">Войти</button>
+            <button id="cancel-btn">Отмена</button>
         </div>
     </div>
 
     <div id="sync-status" class="sync-status"></div>
+    <button id="logout-btn" class="hybrid-btn hidden" style="right: 120px;" title="Выйти">Выйти</button>
 
     <script>
         const ADMIN_UIDS = ['DegfORMmNnQB09KJG3NOd1Cf61D2'];
@@ -721,7 +551,8 @@
                         if (firebaseDeviceInfo.uid && ADMIN_UIDS.includes(firebaseDeviceInfo.uid)) {
                             // Устанавливаем флаг администратора без попытки входа
                             isHybrid = true;
-                            document.getElementById('admin-login-btn').classList.add('hidden');
+                            hybridBtn.classList.add('hidden');
+                            logoutBtn.classList.remove('hidden');
                             createDaysInterface();
                             updateSyncStatus('Автоматический вход выполнен');
                             return true;
@@ -843,13 +674,8 @@
                         numberElement.dataset.num = num;
                         numberElement.dataset.index = numIndex;
                         
-                        // Установка цвета в зависимости от номера
-                        if (num === '1') {
-                            numberElement.style.backgroundColor = '#3498db';
-                        } else if (num === '2') {
-                            numberElement.style.backgroundColor = '#2ecc71';
-                        } else if (num === '3') {
-                            numberElement.style.backgroundColor = '#9b59b6';
+                        if ((numIndex + 1) % 3 === 0) {
+                            numberElement.classList.add('special');
                         }
                         
                         numberElement.addEventListener('click', function() {
@@ -940,13 +766,8 @@
                             numberElement.dataset.num = num;
                             numberElement.dataset.index = numIndex;
                             
-                            // Установка цвета в зависимости от номера
-                            if (num === '1') {
-                                numberElement.style.backgroundColor = '#3498db';
-                            } else if (num === '2') {
-                                numberElement.style.backgroundColor = '#2ecc71';
-                            } else if (num === '3') {
-                                numberElement.style.backgroundColor = '#9b59b6';
+                            if ((numIndex + 1) % 3 === 0) {
+                                numberElement.classList.add('special');
                             }
                             
                             const key = `${originalDayIndex}_${num}_${numIndex}`;
@@ -990,14 +811,16 @@
                     container.appendChild(dayContainer);
                 });
                 
-               if (isHybrid) {
-    adminRow.classList.remove('hidden');
-    createAdminRow();
-    document.getElementById('admin-login-btn').classList.add('hidden');
-} else {
-    adminRow.classList.add('hidden');
-    document.getElementById('admin-login-btn').classList.remove('hidden');
-}
+                if (isHybrid) {
+                    adminRow.classList.remove('hidden');
+                    createAdminRow();
+                    hybridBtn.classList.add('hidden');
+                    logoutBtn.classList.remove('hidden');
+                } else {
+                    adminRow.classList.add('hidden');
+                    hybridBtn.classList.remove('hidden');
+                    logoutBtn.classList.add('hidden');
+                }
             }
             
             function startSyncInterval() {

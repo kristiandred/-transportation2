@@ -12,22 +12,66 @@
             padding: 20px;
             position: relative;
         }
+        
+        /* Навигационная панель */
+        .nav-bar {
+            display: flex;
+            justify-content: space-around;
+            background-color: #f8f9fa;
+            padding: 10px 0;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .nav-btn {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-btn:hover {
+            background-color: #45a049;
+        }
+        
+        .nav-btn.active {
+            background-color: #2E7D32;
+            font-weight: bold;
+        }
+        
+        .hybrid-btn {
+            background-color: #FF9800;
+        }
+        
+        .hybrid-btn:hover {
+            background-color: #e68a00;
+        }
+        
         .day-container {
             margin-bottom: 15px;
         }
+        
         .day-title {
             font-weight: bold;
             margin-bottom: 5px;
         }
+        
         .number-wrapper {
             display: inline-block;
             text-align: center;
             margin: 15px;
         }
+        
         .number-group {
             display: inline-block;
             margin-right: 20px;
         }
+        
         .number {
             display: inline-block;
             width: 40px;
@@ -40,32 +84,26 @@
             cursor: pointer;
             font-size: 18px;
         }
+        
         .number-label {
             font-size: 14px;
             margin-top: 5px;
             font-weight: bold;
         }
+        
         .number.special {
             background-color: #008522;
         }
+        
         .number.selected {
             background-color: #f44336 !important;
         }
+        
         .number.readonly {
             cursor: default;
             opacity: 0.7;
         }
-        .hybrid-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            padding: 5px 10px;
-            background-color: #FF9800;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
+        
         .hybrid-login {
             position: fixed;
             top: 0;
@@ -78,12 +116,14 @@
             align-items: center;
             z-index: 1000;
         }
+        
         .hybrid-login-content {
             background-color: white;
             padding: 20px;
             border-radius: 5px;
             width: 300px;
         }
+        
         .hybrid-login input {
             width: 100%;
             padding: 8px;
@@ -91,9 +131,11 @@
             box-sizing: border-box;
             border: 1px solid #ddd;
         }
+        
         .hybrid-login input[type="password"] {
             -webkit-text-security: disc;
         }
+        
         .hybrid-login button {
             background-color: #4CAF50;
             color: white;
@@ -103,26 +145,31 @@
             cursor: pointer;
             margin-right: 10px;
         }
+        
         .hidden {
             display: none;
         }
+        
         .color-legend {
             display: flex;
             flex-wrap: wrap;
             margin-bottom: 20px;
             gap: 10px;
         }
+        
         .color-item {
             display: flex;
             align-items: center;
             margin-right: 15px;
         }
+        
         .color-box {
             width: 20px;
             height: 20px;
             margin-right: 5px;
             border: 1px solid #ddd;
         }
+        
         .sync-status {
             position: fixed;
             bottom: 10px;
@@ -130,60 +177,88 @@
             font-size: 12px;
             color: #666;
         }
+        
         .today-highlight {
             background-color: #FFF9C4;
             padding: 5px;
             border-radius: 4px;
         }
+        
         .admin-row {
             background-color: #f0f0f0;
             padding: 10px;
             border-radius: 5px;
             margin-bottom: 15px;
         }
+        
         .admin-row.hidden {
             display: none;
         }
+        
         .price-table {
             width: 100%;
             border-collapse: collapse;
             margin: 20px 0;
             font-size: 14px;
         }
+        
         .price-table th, .price-table td {
             border: 1px solid #ddd;
             padding: 8px;
             text-align: left;
         }
+        
         .price-table th {
             background-color: #f2f2f2;
         }
+        
         .price-table tr:nth-child(even) {
             background-color: #f9f9f9;
         }
+        
         .price-table caption {
             font-weight: bold;
             margin-bottom: 10px;
             text-align: center;
         }
+        
+        .content-section {
+            display: none;
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+        
         @media (max-width: 600px) {
             body {
                 padding: 10px;
             }
+            
+            .nav-bar {
+                flex-direction: column;
+                gap: 5px;
+                padding: 10px;
+            }
+            
             .day-container {
                 text-align: center;
             }
+            
             .number-group {
                 display: block;
                 margin-right: 0;
                 margin-bottom: 15px;
             }
+            
             .number-wrapper {
                 margin: 10px 15px;
             }
+            
             .color-legend {
                 justify-content: center;
             }
+            
             .price-table {
                 font-size: 12px;
             }
@@ -194,84 +269,94 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
 <body>
-     
-    <h1>Свободные гибриды Индигра</h1>
+    <h1>Гибрид Индигра</h1>
     
-    <button id="hybrid-btn" class="hybrid-btn">🔰 Гибрид</button>
+    <!-- Навигационная панель -->
+    <div class="nav-bar">
+        <button id="machines-btn" class="nav-btn active">Свободные машины</button>
+        <button id="services-btn" class="nav-btn">Услуги</button>
+        <button id="hybrid-btn" class="nav-btn hybrid-btn">🔰 Гибрид</button>
+    </div>
     
-    <div class="color-legend">
-        <div class="color-item">
-            <div class="color-box" style="background-color: #4CAF50;"></div>
-            <span>Свободная машина (7/24)</span>
+    <!-- Секция свободных машин -->
+    <div id="machines-section" class="content-section active">
+        <div class="color-legend">
+            <div class="color-item">
+                <div class="color-box" style="background-color: #4CAF50;"></div>
+                <span>Свободная машина (7/24)</span>
+            </div>
+            <div class="color-item">
+                <div class="color-box" style="background-color: #008522;"></div>
+                <span>Свободная машина (8/28)</span>
+            </div>
+            <div class="color-item">
+                <div class="color-box" style="background-color: #f44336;"></div>
+                <span>Занятая машина</span>
+            </div>
         </div>
-        <div class="color-item">
-            <div class="color-box" style="background-color: #008522;"></div>
-            <span>Свободная машина (8/28)</span>
+        
+        <div id="admin-row" class="admin-row hidden">
+            <div class="day-title">Администратор (выделить все дни):</div>
         </div>
-        <div class="color-item">
-            <div class="color-box" style="background-color: #f44336;"></div>
-            <span>Занятая машина</span>
+        
+        <div id="days-container">
+            <!-- Дни недели будут добавлены здесь JavaScript -->
         </div>
     </div>
     
-    <div id="admin-row" class="admin-row hidden">
-        <div class="day-title">Администратор (выделить все дни):</div>
-    </div>
-    
-    <div id="days-container">
-        <!-- Дни недели будут добавлены здесь JavaScript -->
-    </div>
-
-    <div class="price-table-container">
-        <table class="price-table">
-            <caption>Тарифы на услуги</caption>
-            <thead>
-                <tr>
-                    <th>Услуга</th>
-                    <th>Стартовая цена</th>
-                    <th>До 50 км</th>
-                    <th>50-100 км</th>
-                    <th>Свыше 100 км</th>
-                    <th>Дополнительно</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Стрела 24м до 7.5м³</td>
-                    <td>600 руб.</td>
-                    <td>5 руб./км</td>
-                    <td>6 руб./км</td>
-                    <td>7 руб./км</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Стрела 28м</td>
-                    <td>650 руб.</td>
-                    <td>5 руб./км</td>
-                    <td>6 руб./км</td>
-                    <td>7 руб./км</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Свыше 7.5м³ до 8.5м³</td>
-                    <td>650 руб.</td>
-                    <td colspan="3"></td>
-                    <td>15 м³ входит в заказ<br>Свыше 15м³ +25 руб./м³</td>
-                </tr>
-                <tr>
-                    <td colspan="5">Дополнительный шланг 4м</td>
-                    <td>50 руб./шт. (2 шланга в комплекте)</td>
-                </tr>
-                <tr>
-                    <td colspan="5">Отсутствие мойки смесительного барабана</td>
-                    <td>200 руб.</td>
-                </tr>
-                <tr>
-                    <td colspan="5">Отсутствие мойки приёмника автобетононасоса</td>
-                    <td>ЗАКАЗ НЕ ПРИНИМАЕТСЯ</td>
-                </tr>
-            </tbody>
-        </table>
+    <!-- Секция услуг -->
+    <div id="services-section" class="content-section">
+        <div class="price-table-container">
+            <table class="price-table">
+                <caption>Тарифы на услуги</caption>
+                <thead>
+                    <tr>
+                        <th>Услуга</th>
+                        <th>Стартовая цена</th>
+                        <th>До 50 км</th>
+                        <th>50-100 км</th>
+                        <th>Свыше 100 км</th>
+                        <th>Дополнительно</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Стрела 24м до 7.5м³</td>
+                        <td>600 руб.</td>
+                        <td>5 руб./км</td>
+                        <td>6 руб./км</td>
+                        <td>7 руб./км</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Стрела 28м</td>
+                        <td>650 руб.</td>
+                        <td>5 руб./км</td>
+                        <td>6 руб./км</td>
+                        <td>7 руб./км</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Свыше 7.5м³ до 8.5м³</td>
+                        <td>650 руб.</td>
+                        <td colspan="3"></td>
+                        <td>15 м³ входит в заказ<br>Свыше 15м³ +25 руб./м³</td>
+                    </tr>
+                    <tr>
+                        <td colspan="5">Дополнительный шланг 4м</td>
+                        <td>50 руб./шт. (2 шланга в комплекте)</td>
+                    </tr>
+                    <tr>
+                        <td colspan="5">Отсутствие мойки смесительного барабана</td>
+                        <td>200 руб.</td>
+                    </tr>
+                    <tr>
+                        <td colspan="5">Отсутствие мойки приёмника автобетононасоса</td>
+                        <td>ЗАКАЗ НЕ ПРИНИМАЕТСЯ</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <div id="hybrid-login" class="hybrid-login hidden">
@@ -289,7 +374,7 @@
     </div>
 
     <div id="sync-status" class="sync-status"></div>
-    <button id="logout-btn" class="hybrid-btn hidden" style="right: 120px;">🚪 Выйти</button>
+    <button id="logout-btn" class="hybrid-btn hidden" style="position: fixed; top: 80px; right: 20px;">🚪 Выйти</button>
 
     <script>
         const ADMIN_UIDS = ['DegfORMmNnQB09KJG3NOd1Cf61D2'];
@@ -325,7 +410,13 @@
             const today = new Date();
             let todayDayOfWeek = today.getDay();
             
+            // Элементы навигации
+            const machinesBtn = document.getElementById('machines-btn');
+            const servicesBtn = document.getElementById('services-btn');
             const hybridBtn = document.getElementById('hybrid-btn');
+            const machinesSection = document.getElementById('machines-section');
+            const servicesSection = document.getElementById('services-section');
+            
             const hybridLogin = document.getElementById('hybrid-login');
             const hybridEmailInput = document.getElementById('hybrid-email');
             const hybridPasswordInput = document.getElementById('hybrid-password');
@@ -342,6 +433,21 @@
             let syncInterval;
             let refreshInterval;
             let pageRefreshInterval;
+
+            // Обработчики навигации
+            machinesBtn.addEventListener('click', function() {
+                machinesBtn.classList.add('active');
+                servicesBtn.classList.remove('active');
+                machinesSection.classList.add('active');
+                servicesSection.classList.remove('active');
+            });
+            
+            servicesBtn.addEventListener('click', function() {
+                servicesBtn.classList.add('active');
+                machinesBtn.classList.remove('active');
+                servicesSection.classList.add('active');
+                machinesSection.classList.remove('active');
+            });
 
             // Генерация уникального идентификатора устройства
             function getDeviceId() {

@@ -4,99 +4,222 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Гибрид Индигра</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #2c3e50;
+            --success-color: #4CAF50;
+            --special-color: #008522;
+            --selected-color: #f44336;
+            --highlight-color: #FFF9C4;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
         body {
-            font-family: Arial, sans-serif;
-            max-width: 750px;
+            font-family: 'Roboto', sans-serif;
+            max-width: 900px;
             margin: 0 auto;
             padding: 20px;
             position: relative;
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
         }
+        
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 24px;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .logo-text {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        
+        .logo-subtext {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-top: 3px;
+        }
+        
         .navbar {
             display: flex;
             justify-content: center;
-            background-color: #f8f9fa;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 20px;
+            background-color: white;
+            padding: 12px;
+            border-radius: var(--border-radius);
+            margin-bottom: 30px;
             flex-wrap: wrap;
+            box-shadow: var(--box-shadow);
         }
+        
         .navbar a {
-            color: #333;
+            color: var(--dark-color);
             text-decoration: none;
-            padding: 8px 15px;
+            padding: 10px 20px;
             margin: 0 5px;
-            border-radius: 4px;
-            transition: background-color 0.3s;
+            border-radius: var(--border-radius);
+            transition: all 0.3s;
+            font-weight: 500;
         }
+        
         .navbar a:hover {
-            background-color: #e9ecef;
+            background-color: var(--light-color);
+            transform: translateY(-2px);
         }
+        
+        .content-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: var(--box-shadow);
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 28px;
+        }
+        
+        h2 {
+            color: var(--primary-color);
+            margin-top: 0;
+            font-size: 22px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
         .day-container {
-            margin-bottom: 15px;
+            margin-bottom: 25px;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            background-color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
+        
         .day-title {
             font-weight: bold;
-            margin-bottom: 5px;
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
         }
+        
         .number-wrapper {
             display: inline-block;
             text-align: center;
             margin: 15px;
+            transition: transform 0.2s;
         }
+        
+        .number-wrapper:hover {
+            transform: scale(1.05);
+        }
+        
         .number-group {
             display: inline-block;
-            margin-right: 20px;
+            margin-right: 25px;
         }
+        
         .number {
             display: inline-block;
-            width: 40px;
-            height: 40px;
-            line-height: 40px;
+            width: 50px;
+            height: 50px;
+            line-height: 50px;
             text-align: center;
-            background-color: #4CAF50;
+            background-color: var(--success-color);
             color: white;
             border-radius: 50%;
             cursor: pointer;
-            font-size: 18px;
+            font-size: 20px;
+            font-weight: bold;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s;
         }
+        
+        .number:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15);
+        }
+        
         .number-label {
             font-size: 14px;
-            margin-top: 5px;
-            font-weight: bold;
+            margin-top: 8px;
+            font-weight: 500;
+            color: #555;
         }
+        
         .number.special {
-            background-color: #008522;
+            background-color: var(--special-color);
         }
+        
         .number.selected {
-            background-color: #f44336 !important;
+            background-color: var(--selected-color) !important;
+            transform: scale(0.95);
         }
+        
         .number.readonly {
             cursor: default;
-            opacity: 0.7;
+            opacity: 0.9;
         }
+        
         .hybrid-btn {
             position: absolute;
-            top: 20px;
+            top: 30px;
             right: 20px;
             padding: 5px 10px;
-            background-color: #FF9800;
+            background-color: var(--secondary-color);
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: var(--border-radius);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             font-size: 20px;
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/><path d="M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"/></svg>');
-            background-repeat: no-repeat;
-            background-position: center;
-            text-indent: -9999px;
-            overflow: hidden;
+            box-shadow: var(--box-shadow);
+            transition: all 0.3s;
         }
+        
+        .hybrid-btn:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+        
         .hybrid-login {
             position: fixed;
             top: 0;
@@ -109,126 +232,243 @@
             align-items: center;
             z-index: 1000;
         }
+        
         .hybrid-login-content {
             background-color: white;
-            padding: 20px;
-            border-radius: 5px;
-            width: 300px;
+            padding: 30px;
+            border-radius: var(--border-radius);
+            width: 350px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
         }
+        
+        .hybrid-login h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+            text-align: center;
+        }
+        
         .hybrid-login input {
             width: 100%;
-            padding: 8px;
+            padding: 12px;
             margin: 10px 0;
             box-sizing: border-box;
             border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            transition: border 0.3s;
         }
+        
+        .hybrid-login input:focus {
+            border-color: var(--secondary-color);
+            outline: none;
+        }
+        
         .hybrid-login input[type="password"] {
             -webkit-text-security: disc;
         }
+        
         .hybrid-login button {
-            background-color: #4CAF50;
+            background-color: var(--secondary-color);
             color: white;
-            padding: 8px 12px;
+            padding: 12px 20px;
             border: none;
-            border-radius: 4px;
+            border-radius: var(--border-radius);
             cursor: pointer;
             margin-right: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
         }
+        
+        .hybrid-login button:hover {
+            background-color: #2980b9;
+        }
+        
+        .hybrid-login .button-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
         .hidden {
             display: none;
         }
+        
         .color-legend {
             display: flex;
             flex-wrap: wrap;
-            margin-bottom: 20px;
-            gap: 10px;
+            margin-bottom: 25px;
+            gap: 15px;
+            justify-content: center;
         }
+        
         .color-item {
             display: flex;
             align-items: center;
             margin-right: 15px;
+            background-color: white;
+            padding: 8px 12px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
         }
+        
         .color-box {
             width: 20px;
             height: 20px;
-            margin-right: 5px;
-            border: 1px solid #ddd;
+            margin-right: 8px;
+            border-radius: 3px;
         }
+        
         .sync-status {
             position: fixed;
-            bottom: 10px;
-            right: 10px;
+            bottom: 15px;
+            right: 15px;
             font-size: 12px;
-            color: #666;
+            color: #7f8c8d;
+            background-color: white;
+            padding: 8px 12px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
+        
         .today-highlight {
-            background-color: #FFF9C4;
-            padding: 5px;
-            border-radius: 4px;
+            background-color: var(--highlight-color);
+            padding: 8px 15px;
+            border-radius: var(--border-radius);
+            display: inline-block;
         }
+        
         .admin-row {
-            background-color: #f0f0f0;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 15px;
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            margin-bottom: 25px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
-        .admin-row.hidden {
-            display: none;
-        }
+        
         .price-table {
             width: 100%;
             border-collapse: collapse;
             margin: 20px 0;
             font-size: 14px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
+        
         .price-table th, .price-table td {
             border: 1px solid #ddd;
-            padding: 8px;
+            padding: 12px;
             text-align: left;
         }
+        
         .price-table th {
-            background-color: #f2f2f2;
+            background-color: var(--primary-color);
+            color: white;
         }
+        
         .price-table tr:nth-child(even) {
             background-color: #f9f9f9;
         }
+        
+        .price-table tr:hover {
+            background-color: #f1f1f1;
+        }
+        
         .price-table caption {
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             text-align: center;
+            font-size: 18px;
+            color: var(--primary-color);
         }
+        
         .section {
-            scroll-margin-top: 80px;
+            scroll-margin-top: 100px;
         }
-        @media (max-width: 600px) {
+        
+        .logout-btn {
+            position: absolute;
+            top: 30px;
+            right: 80px;
+            padding: 5px 10px;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            font-size: 20px;
+            box-shadow: var(--box-shadow);
+            transition: all 0.3s;
+        }
+        
+        .logout-btn:hover {
+            background-color: #c0392b;
+            transform: translateY(-2px);
+        }
+        
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+        }
+        
+        .checkbox-container input {
+            width: auto;
+            margin-right: 10px;
+        }
+        
+        @media (max-width: 768px) {
             body {
-                padding: 10px;
+                padding: 15px;
             }
-            .day-container {
-                text-align: center;
+            
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
             }
+            
+            .hybrid-btn, .logout-btn {
+                position: static;
+                margin-top: 15px;
+                width: 100%;
+            }
+            
             .number-group {
                 display: block;
                 margin-right: 0;
-                margin-bottom: 15px;
+                margin-bottom: 20px;
             }
+            
             .number-wrapper {
                 margin: 10px 15px;
             }
+            
             .color-legend {
-                justify-content: center;
+                justify-content: flex-start;
             }
+            
             .price-table {
                 font-size: 12px;
             }
+            
             .navbar {
                 flex-direction: column;
-                align-items: center;
+                align-items: stretch;
+                gap: 5px;
             }
+            
             .navbar a {
                 margin: 5px 0;
-                width: 100%;
                 text-align: center;
+            }
+            
+            .hybrid-login-content {
+                width: 90%;
+                padding: 20px;
             }
         }
     </style>
@@ -237,111 +477,128 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
 <body>
+    <!-- Шапка с логотипом -->
+    <div class="header">
+        <div class="logo">
+            <div class="logo-icon">И</div>
+            <div>
+                <div class="logo-text">Индигра Гибрид</div>
+                <div class="logo-subtext">Система управления автобетононасосами</div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Навигационная панель -->
     <div class="navbar">
         <a href="#machines-section">Свободные машины</a>
         <a href="#services-section">Услуги</a>
     </div>
     
-    <h1>Свободные гибриды Индигра</h1>
-    
-    <button id="hybrid-btn" class="hybrid-btn" title="Гибрид">Гибрид</button>
-    
-    <div id="machines-section" class="section">
-        <div class="color-legend">
-            <div class="color-item">
-                <div class="color-box" style="background-color: #4CAF50;"></div>
-                <span>Свободная машина (7/24)</span>
+    <!-- Основной контент -->
+    <div class="content-card">
+        <h1>Свободные гибриды Индигра</h1>
+        
+        <button id="hybrid-btn" class="hybrid-btn" title="Гибрид">Гибрид</button>
+        <button id="logout-btn" class="logout-btn hidden" title="Выйти">Выйти</button>
+        
+        <div id="machines-section" class="section">
+            <div class="color-legend">
+                <div class="color-item">
+                    <div class="color-box" style="background-color: #4CAF50;"></div>
+                    <span>Свободная машина (7/24)</span>
+                </div>
+                <div class="color-item">
+                    <div class="color-box" style="background-color: #008522;"></div>
+                    <span>Свободная машина (8/28)</span>
+                </div>
+                <div class="color-item">
+                    <div class="color-box" style="background-color: #f44336;"></div>
+                    <span>Занятая машина</span>
+                </div>
             </div>
-            <div class="color-item">
-                <div class="color-box" style="background-color: #008522;"></div>
-                <span>Свободная машина (8/28)</span>
+            
+            <div id="admin-row" class="admin-row hidden">
+                <div class="day-title">Администратор (выделить все дни):</div>
             </div>
-            <div class="color-item">
-                <div class="color-box" style="background-color: #f44336;"></div>
-                <span>Занятая машина</span>
+            
+            <div id="days-container">
+                <!-- Дни недели будут добавлены здесь JavaScript -->
             </div>
         </div>
-        
-        <div id="admin-row" class="admin-row hidden">
-            <div class="day-title">Администратор (выделить все дни):</div>
-        </div>
-        
-        <div id="days-container">
-            <!-- Дни недели будут добавлены здесь JavaScript -->
+
+        <div id="services-section" class="section">
+            <h2>Тарифы на услуги</h2>
+            <div class="price-table-container">
+                <table class="price-table">
+                    <thead>
+                        <tr>
+                            <th>Услуга</th>
+                            <th>Стартовая цена</th>
+                            <th>До 50 км</th>
+                            <th>50-100 км</th>
+                            <th>Свыше 100 км</th>
+                            <th>Дополнительно</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Стрела 24м до 7.5м³</td>
+                            <td>600 руб.</td>
+                            <td>5 руб./км</td>
+                            <td>6 руб./км</td>
+                            <td>7 руб./км</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>Стрела 28м</td>
+                            <td>650 руб.</td>
+                            <td>5 руб./км</td>
+                            <td>6 руб./км</td>
+                            <td>7 руб./км</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>Свыше 7.5м³ до 8.5м³</td>
+                            <td>650 руб.</td>
+                            <td colspan="3"></td>
+                            <td>15 м³ входит в заказ<br>Свыше 15м³ +25 руб./м³</td>
+                        </tr>
+                        <tr>
+                            <td colspan="5">Дополнительный шланг 4м</td>
+                            <td>50 руб./шт. (2 шланга в комплекте)</td>
+                        </tr>
+                        <tr>
+                            <td colspan="5">Отсутствие мойки смесительного барабана</td>
+                            <td>200 руб.</td>
+                        </tr>
+                        <tr>
+                            <td colspan="5">Отсутствие мойки приёмника автобетононасоса</td>
+                            <td>ЗАКАЗ НЕ ПРИНИМАЕТСЯ</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    <div id="services-section" class="section">
-        <div class="price-table-container">
-            <table class="price-table">
-                <caption>Тарифы на услуги</caption>
-                <thead>
-                    <tr>
-                        <th>Услуга</th>
-                        <th>Стартовая цена</th>
-                        <th>До 50 км</th>
-                        <th>50-100 км</th>
-                        <th>Свыше 100 км</th>
-                        <th>Дополнительно</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Стрела 24м до 7.5м³</td>
-                        <td>600 руб.</td>
-                        <td>5 руб./км</td>
-                        <td>6 руб./км</td>
-                        <td>7 руб./км</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>Стрела 28м</td>
-                        <td>650 руб.</td>
-                        <td>5 руб./км</td>
-                        <td>6 руб./км</td>
-                        <td>7 руб./км</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>Свыше 7.5м³ до 8.5м³</td>
-                        <td>650 руб.</td>
-                        <td colspan="3"></td>
-                        <td>15 м³ входит в заказ<br>Свыше 15м³ +25 руб./м³</td>
-                    </tr>
-                    <tr>
-                        <td colspan="5">Дополнительный шланг 4м</td>
-                        <td>50 руб./шт. (2 шланга в комплекте)</td>
-                    </tr>
-                    <tr>
-                        <td colspan="5">Отсутствие мойки смесительного барабана</td>
-                        <td>200 руб.</td>
-                    </tr>
-                    <tr>
-                        <td colspan="5">Отсутствие мойки приёмника автобетононасоса</td>
-                        <td>ЗАКАЗ НЕ ПРИНИМАЕТСЯ</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
+    <!-- Модальное окно входа -->
     <div id="hybrid-login" class="hybrid-login hidden">
         <div class="hybrid-login-content">
             <h3>Вход для администратора</h3>
             <input type="email" id="hybrid-email" placeholder="Введите email">
             <input type="password" id="hybrid-password" placeholder="Введите пароль">
-            <div style="margin-top: 10px;">
+            <div class="checkbox-container">
                 <input type="checkbox" id="remember-device" checked>
                 <label for="remember-device">Запомнить это устройство</label>
             </div>
-            <button id="login-btn">Войти</button>
-            <button id="cancel-btn">Отмена</button>
+            <div class="button-group">
+                <button id="login-btn">Войти</button>
+                <button id="cancel-btn">Отмена</button>
+            </div>
         </div>
     </div>
 
     <div id="sync-status" class="sync-status"></div>
-    <button id="logout-btn" class="hybrid-btn hidden" style="right: 120px;" title="Выйти">Выйти</button>
 
     <script>
         const ADMIN_UIDS = ['DegfORMmNnQB09KJG3NOd1Cf61D2'];

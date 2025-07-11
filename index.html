@@ -360,6 +360,42 @@
                 margin-bottom: 15px;
             }
         }
+        .admin-login-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+    font-family: 'Arial', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.admin-login-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(135deg, #2980b9, #3498db);
+}
+
+.admin-login-btn::after {
+    content: "ADMIN";
+    display: block;
+    font-size: 10px;
+    letter-spacing: normal;
+    text-transform: none;
+    margin-top: -5px;
+    opacity: 0.8;
+}
     </style>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
@@ -378,8 +414,7 @@
         <a href="#services-section">Услуги</a>
     </div>
     
-    <button id="hybrid-btn" class="hybrid-btn hidden" title="Гибрид"></button>
-    <button id="logout-btn" class="logout-btn hidden" title="Выйти"></button>
+    <div id="admin-login-btn" class="admin-login-btn hidden">Индигра</div>
     
     <div id="machines-section" class="section">
         <div class="color-legend">
@@ -686,8 +721,7 @@
                         if (firebaseDeviceInfo.uid && ADMIN_UIDS.includes(firebaseDeviceInfo.uid)) {
                             // Устанавливаем флаг администратора без попытки входа
                             isHybrid = true;
-                            hybridBtn.classList.add('hidden');
-                            logoutBtn.classList.remove('hidden');
+                            document.getElementById('admin-login-btn').classList.add('hidden');
                             createDaysInterface();
                             updateSyncStatus('Автоматический вход выполнен');
                             return true;
@@ -956,16 +990,14 @@
                     container.appendChild(dayContainer);
                 });
                 
-                if (isHybrid) {
-                    adminRow.classList.remove('hidden');
-                    createAdminRow();
-                    hybridBtn.classList.add('hidden');
-                    logoutBtn.classList.remove('hidden');
-                } else {
-                    adminRow.classList.add('hidden');
-                    hybridBtn.classList.add('hidden');
-                    logoutBtn.classList.add('hidden');
-                }
+               if (isHybrid) {
+    adminRow.classList.remove('hidden');
+    createAdminRow();
+    document.getElementById('admin-login-btn').classList.add('hidden');
+} else {
+    adminRow.classList.add('hidden');
+    document.getElementById('admin-login-btn').classList.remove('hidden');
+}
             }
             
             function startSyncInterval() {

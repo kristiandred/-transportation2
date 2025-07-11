@@ -12,6 +12,26 @@
             padding: 20px;
             position: relative;
         }
+        .navbar {
+            display: flex;
+            justify-content: center;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .navbar a {
+            color: #333;
+            text-decoration: none;
+            padding: 8px 15px;
+            margin: 0 5px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        .navbar a:hover {
+            background-color: #e9ecef;
+        }
         .day-container {
             margin-bottom: 15px;
         }
@@ -65,6 +85,17 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/><path d="M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: center;
+            text-indent: -9999px;
+            overflow: hidden;
         }
         .hybrid-login {
             position: fixed;
@@ -166,6 +197,9 @@
             margin-bottom: 10px;
             text-align: center;
         }
+        .section {
+            scroll-margin-top: 80px;
+        }
         @media (max-width: 600px) {
             body {
                 padding: 10px;
@@ -187,6 +221,15 @@
             .price-table {
                 font-size: 12px;
             }
+            .navbar {
+                flex-direction: column;
+                align-items: center;
+            }
+            .navbar a {
+                margin: 5px 0;
+                width: 100%;
+                text-align: center;
+            }
         }
     </style>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -194,84 +237,93 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
 <body>
-     
+    <!-- Навигационная панель -->
+    <div class="navbar">
+        <a href="#machines-section">Свободные машины</a>
+        <a href="#services-section">Услуги</a>
+    </div>
+    
     <h1>Свободные гибриды Индигра</h1>
     
-    <button id="hybrid-btn" class="hybrid-btn">🔰 Гибрид</button>
+    <button id="hybrid-btn" class="hybrid-btn" title="Гибрид">Гибрид</button>
     
-    <div class="color-legend">
-        <div class="color-item">
-            <div class="color-box" style="background-color: #4CAF50;"></div>
-            <span>Свободная машина (7/24)</span>
+    <div id="machines-section" class="section">
+        <div class="color-legend">
+            <div class="color-item">
+                <div class="color-box" style="background-color: #4CAF50;"></div>
+                <span>Свободная машина (7/24)</span>
+            </div>
+            <div class="color-item">
+                <div class="color-box" style="background-color: #008522;"></div>
+                <span>Свободная машина (8/28)</span>
+            </div>
+            <div class="color-item">
+                <div class="color-box" style="background-color: #f44336;"></div>
+                <span>Занятая машина</span>
+            </div>
         </div>
-        <div class="color-item">
-            <div class="color-box" style="background-color: #008522;"></div>
-            <span>Свободная машина (8/28)</span>
+        
+        <div id="admin-row" class="admin-row hidden">
+            <div class="day-title">Администратор (выделить все дни):</div>
         </div>
-        <div class="color-item">
-            <div class="color-box" style="background-color: #f44336;"></div>
-            <span>Занятая машина</span>
+        
+        <div id="days-container">
+            <!-- Дни недели будут добавлены здесь JavaScript -->
         </div>
-    </div>
-    
-    <div id="admin-row" class="admin-row hidden">
-        <div class="day-title">Администратор (выделить все дни):</div>
-    </div>
-    
-    <div id="days-container">
-        <!-- Дни недели будут добавлены здесь JavaScript -->
     </div>
 
-    <div class="price-table-container">
-        <table class="price-table">
-            <caption>Тарифы на услуги</caption>
-            <thead>
-                <tr>
-                    <th>Услуга</th>
-                    <th>Стартовая цена</th>
-                    <th>До 50 км</th>
-                    <th>50-100 км</th>
-                    <th>Свыше 100 км</th>
-                    <th>Дополнительно</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Стрела 24м до 7.5м³</td>
-                    <td>600 руб.</td>
-                    <td>5 руб./км</td>
-                    <td>6 руб./км</td>
-                    <td>7 руб./км</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Стрела 28м</td>
-                    <td>650 руб.</td>
-                    <td>5 руб./км</td>
-                    <td>6 руб./км</td>
-                    <td>7 руб./км</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Свыше 7.5м³ до 8.5м³</td>
-                    <td>650 руб.</td>
-                    <td colspan="3"></td>
-                    <td>15 м³ входит в заказ<br>Свыше 15м³ +25 руб./м³</td>
-                </tr>
-                <tr>
-                    <td colspan="5">Дополнительный шланг 4м</td>
-                    <td>50 руб./шт. (2 шланга в комплекте)</td>
-                </tr>
-                <tr>
-                    <td colspan="5">Отсутствие мойки смесительного барабана</td>
-                    <td>200 руб.</td>
-                </tr>
-                <tr>
-                    <td colspan="5">Отсутствие мойки приёмника автобетононасоса</td>
-                    <td>ЗАКАЗ НЕ ПРИНИМАЕТСЯ</td>
-                </tr>
-            </tbody>
-        </table>
+    <div id="services-section" class="section">
+        <div class="price-table-container">
+            <table class="price-table">
+                <caption>Тарифы на услуги</caption>
+                <thead>
+                    <tr>
+                        <th>Услуга</th>
+                        <th>Стартовая цена</th>
+                        <th>До 50 км</th>
+                        <th>50-100 км</th>
+                        <th>Свыше 100 км</th>
+                        <th>Дополнительно</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Стрела 24м до 7.5м³</td>
+                        <td>600 руб.</td>
+                        <td>5 руб./км</td>
+                        <td>6 руб./км</td>
+                        <td>7 руб./км</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Стрела 28м</td>
+                        <td>650 руб.</td>
+                        <td>5 руб./км</td>
+                        <td>6 руб./км</td>
+                        <td>7 руб./км</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Свыше 7.5м³ до 8.5м³</td>
+                        <td>650 руб.</td>
+                        <td colspan="3"></td>
+                        <td>15 м³ входит в заказ<br>Свыше 15м³ +25 руб./м³</td>
+                    </tr>
+                    <tr>
+                        <td colspan="5">Дополнительный шланг 4м</td>
+                        <td>50 руб./шт. (2 шланга в комплекте)</td>
+                    </tr>
+                    <tr>
+                        <td colspan="5">Отсутствие мойки смесительного барабана</td>
+                        <td>200 руб.</td>
+                    </tr>
+                    <tr>
+                        <td colspan="5">Отсутствие мойки приёмника автобетононасоса</td>
+                        <td>ЗАКАЗ НЕ ПРИНИМАЕТСЯ</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <div id="hybrid-login" class="hybrid-login hidden">
@@ -289,7 +341,7 @@
     </div>
 
     <div id="sync-status" class="sync-status"></div>
-    <button id="logout-btn" class="hybrid-btn hidden" style="right: 120px;">🚪 Выйти</button>
+    <button id="logout-btn" class="hybrid-btn hidden" style="right: 120px;" title="Выйти">Выйти</button>
 
     <script>
         const ADMIN_UIDS = ['DegfORMmNnQB09KJG3NOd1Cf61D2'];
